@@ -249,6 +249,11 @@ var TableOptions = (function () {
         // The row height; which is necessary
         // to calculate the height for the lazy rendering.
         this.rowHeight = 30;
+        // This will be used when displaying or selecting rows:
+        // when tracking/comparing them, we'll use the value of this fn,
+        // instead of comparing the objects directly
+        // (`fn(x) === fn(y)` instead of `x === y`)
+        this.rowIdentityFunction = (function (x) { return x; });
         // flex
         // force
         // standard
@@ -277,6 +282,16 @@ var TableOptions = (function () {
         this.offset = 0;
         // Loading indicator
         this.loadingIndicator = false;
+        // Should we mutate the [selected] array on our own,
+        // or just publish the selection events?
+        //
+        // True is the old behaviour - after selecting the row,
+        // it will automatically update the selected's array.
+        //
+        // If false, DataTable component will just propagate
+        // a onSelectionChange event: after that, you will have
+        // to change the selected's array value on your own.
+        this.mutateSelectionState = true;
         // if you can reorder columns
         this.reorderable = true;
         // type of sorting
@@ -508,7 +523,6 @@ var Sort = (function () {
 var StateService = (function () {
     function StateService() {
         this.rows = [];
-        this.selected = [];
         this.onSelectionChange = new EventEmitter();
         this.onRowsUpdate = new EventEmitter();
         this.onPageChange = new EventEmitter();
@@ -516,6 +530,7 @@ var StateService = (function () {
         this.offsetX = 0;
         this.offsetY = 0;
         this.innerWidth = 0;
+        this.selectedIdentities = [];
     }
     Object.defineProperty(StateService.prototype, "bodyHeight", {
         get: function () {
@@ -586,23 +601,22 @@ var StateService = (function () {
         enumerable: true,
         configurable: true
     });
+    Object.defineProperty(StateService.prototype, "selected", {
+        get: function () {
+            var _this = this;
+            return this.rows.filter(function (row) { return _this.isRowSelected(row); });
+        },
+        enumerable: true,
+        configurable: true
+    });
     StateService.prototype.setSelected = function (selected) {
-        if (!this.selected) {
-            this.selected = selected || [];
-        }
-        else {
-            this.selected.splice(0, this.selected.length);
-            (_a = this.selected).push.apply(_a, selected);
-        }
+        this.selectedIdentities = (selected || []).map(this.options.rowIdentityFunction);
         this.onSelectionChange.emit(this.selected);
         return this;
-        var _a;
     };
     StateService.prototype.setRows = function (rows) {
-        if (rows) {
-            this.rows = rows.slice();
-            this.onRowsUpdate.emit(rows);
-        }
+        this.rows = rows ? rows.slice() : [];
+        this.onRowsUpdate.emit(rows);
         return this;
     };
     StateService.prototype.setOptions = function (options) {
@@ -618,6 +632,10 @@ var StateService = (function () {
             limit: this.pageSize,
             count: this.rowCount
         });
+    };
+    StateService.prototype.isRowSelected = function (row) {
+        var rowIdentity = this.options.rowIdentityFunction(row);
+        return this.selectedIdentities.indexOf(rowIdentity) !== -1;
     };
     StateService.prototype.nextSort = function (column) {
         var idx = this.options.sorts.findIndex(function (s) {
@@ -758,7 +776,9 @@ var DataTable = (function () {
         }
     };
     DataTable.prototype.onRowSelect = function (event) {
-        this.state.setSelected(event);
+        if (this.options.mutateSelectionState) {
+            this.state.setSelected(event);
+        }
         this.onSelectionChange.emit(event);
     };
     DataTable.prototype.resize = function () {
@@ -1300,15 +1320,13 @@ var DataTableBody = (function () {
         var selections = [];
         if (multiShift || multiClick) {
             if (multiShift && event.shiftKey) {
-                var selected = this.state.selected.slice();
-                selections = selectRowsBetween(selected, this.rows, index, this.prevIndex);
+                selections = selectRowsBetween(this.state.selected, this.rows, index, this.prevIndex);
             }
             else if (multiShift && !event.shiftKey) {
                 selections.push(row);
             }
             else {
-                var selected = this.state.selected.slice();
-                selections = selectRows(selected, row);
+                selections = selectRows(this.state.selected, row);
             }
         }
         else {
@@ -1574,8 +1592,7 @@ var DataTableBodyRow = (function () {
     }
     Object.defineProperty(DataTableBodyRow.prototype, "isSelected", {
         get: function () {
-            return this.state.selected &&
-                this.state.selected.indexOf(this.row) > -1;
+            return this.state.isRowSelected(this.row);
         },
         enumerable: true,
         configurable: true

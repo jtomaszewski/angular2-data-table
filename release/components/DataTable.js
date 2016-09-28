@@ -122,7 +122,9 @@ var DataTable = (function () {
         }
     };
     DataTable.prototype.onRowSelect = function (event) {
-        this.state.setSelected(event);
+        if (this.options.mutateSelectionState) {
+            this.state.setSelected(event);
+        }
         this.onSelectionChange.emit(event);
     };
     DataTable.prototype.resize = function () {

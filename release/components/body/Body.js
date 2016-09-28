@@ -148,15 +148,13 @@ var DataTableBody = (function () {
         var selections = [];
         if (multiShift || multiClick) {
             if (multiShift && event.shiftKey) {
-                var selected = this.state.selected.slice();
-                selections = selection_1.selectRowsBetween(selected, this.rows, index, this.prevIndex);
+                selections = selection_1.selectRowsBetween(this.state.selected, this.rows, index, this.prevIndex);
             }
             else if (multiShift && !event.shiftKey) {
                 selections.push(row);
             }
             else {
-                var selected = this.state.selected.slice();
-                selections = selection_1.selectRows(selected, row);
+                selections = selection_1.selectRows(this.state.selected, row);
             }
         }
         else {

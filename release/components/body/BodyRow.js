@@ -18,8 +18,7 @@ var DataTableBodyRow = (function () {
     }
     Object.defineProperty(DataTableBodyRow.prototype, "isSelected", {
         get: function () {
-            return this.state.selected &&
-                this.state.selected.indexOf(this.row) > -1;
+            return this.state.isRowSelected(this.row);
         },
         enumerable: true,
         configurable: true
