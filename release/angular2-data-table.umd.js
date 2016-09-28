@@ -1682,7 +1682,8 @@ var DataTableBodyCell = (function () {
     DataTableBodyCell = __decorate([
         _angular_core.Component({
             selector: 'datatable-body-cell',
-            template: "\n    <div class=\"datatable-body-cell-label\">\n      <span\n        *ngIf=\"!column.template\"\n        [innerHTML]=\"value\">\n      </span>\n      <template\n        *ngIf=\"column.template\"\n        [value]=\"value\"\n        [row]=\"row\"\n        [column]=\"column\"\n        [templateWrapper]=\"column.template\">\n      </template>\n    </div>\n  "
+            template: "\n    <div class=\"datatable-body-cell-label\">\n      <span\n        *ngIf=\"!column.template\"\n        [innerHTML]=\"value\">\n      </span>\n      <template\n        *ngIf=\"column.template\"\n        [value]=\"value\"\n        [row]=\"row\"\n        [column]=\"column\"\n        [templateWrapper]=\"column.template\">\n      </template>\n    </div>\n  ",
+            changeDetection: _angular_core.ChangeDetectionStrategy.OnPush
         }), 
         __metadata('design:paramtypes', [(typeof (_b = typeof _angular_core.ElementRef !== 'undefined' && _angular_core.ElementRef) === 'function' && _b) || Object, (typeof (_c = typeof _angular_core.Renderer !== 'undefined' && _angular_core.Renderer) === 'function' && _c) || Object])
     ], DataTableBodyCell);
