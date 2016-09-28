@@ -9,7 +9,6 @@ export class StateService {
 
   options: TableOptions;
   rows: Array<any> = [];
-  selected: Array<any> = [];
 
   onSortChange: EventEmitter<any> = new EventEmitter();
   onSelectionChange: EventEmitter<any> = new EventEmitter();
@@ -25,6 +24,16 @@ export class StateService {
   // its only used internally, if you
   // need to set the tables element style height
   bodyHeight: number = 300;
+  private selectedIdentities: Array<any> = [];
+
+  private _bodyHeight: number;
+  set bodyHeight(value: number)
+  {
+    this._bodyHeight = value;
+  }
+  get bodyHeight(): number {
+    return this._bodyHeight || (this.options.tableHeight - this.options.headerHeight - this.options.footerHeight);
+  }
 
   get columnsByPin() {
     return columnsByPin(this.options.columns);
@@ -68,24 +77,21 @@ export class StateService {
     return { first, last };
   }
 
-  setSelected(selected: any[]): StateService {
-    if (!this.selected) {
-      this.selected = selected || [];
-    } else {
-      this.selected.splice(0, this.selected.length);
-      this.selected.push(...selected);
-    }
+  get selected(): any[] {
+    return this.rows.filter(row => this.isRowSelected(row));
+  }
 
+  setSelected(selected: any[]): StateService {
+    this.selectedIdentities = (selected || []).map(this.options.rowIdentityFunction);
     this.onSelectionChange.emit(this.selected);
 
     return this;
   }
 
-  setRows(rows: Array<any>): StateService {
-    if (rows) {
-      this.rows = [...rows];
-      this.onRowsUpdate.emit(rows);
-    }
+  setRows(rows: any[]): StateService {
+    this.rows = rows ? [...rows] : [];
+    this.onRowsUpdate.emit(rows);
+
     return this;
   }
 
@@ -103,6 +109,11 @@ export class StateService {
       limit: this.pageSize,
       count: this.rowCount
     });
+  }
+
+  isRowSelected(row: any): boolean {
+    const rowIdentity = this.options.rowIdentityFunction(row);
+    return this.selectedIdentities.indexOf(rowIdentity) !== -1;
   }
 
   nextSort(column: TableColumn): void {
