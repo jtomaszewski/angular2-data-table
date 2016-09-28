@@ -10,7 +10,6 @@ import {
   OnInit,
   OnChanges,
   QueryList,
-  DoCheck,
   AfterViewInit,
   IterableDiffer,
   HostBinding,
@@ -47,7 +46,7 @@ import { StateService } from '../services/State';
     </div>
   `
 })
-export class DataTable implements OnInit, OnChanges, DoCheck, AfterViewInit {
+export class DataTable implements OnInit, OnChanges, AfterViewInit {
 
   @Input() options: TableOptions;
   @Input() rows: any[];
@@ -116,40 +115,8 @@ export class DataTable implements OnInit, OnChanges, DoCheck, AfterViewInit {
     }
   }
 
-  ngDoCheck() {
-    if (this.rowDiffer.diff(this.rows)) {
-      this.state.setRows(this.rows);
-      this.onRowsUpdate.emit(this.rows);
-    }
-
-    this.checkColumnChanges();
-  }
-
   ngOnDestroy() {
     this.pageSubscriber.unsubscribe();
-  }
-
-  checkColumnChanges() {
-    const colDiff = this.colDiffer.diff(this.options.columns);
-
-    if (colDiff) {
-      let chngd: boolean = false;
-      colDiff.forEachAddedItem(() => {
-        chngd = true;
-        return false;
-      });
-
-      if (!chngd) {
-        colDiff.forEachRemovedItem(() => {
-          chngd = true;
-          return false;
-        });
-      }
-
-      // if a column was added or removed
-      // we need to re-adjust columns
-      if (chngd) this.adjustColumns();
-    }
   }
 
   adjustSizes() {
