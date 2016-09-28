@@ -12,7 +12,7 @@ import { StateService } from '../../services/State';
         [ngStyle]="stylesByGroup('left')"
         [style.width]="state.columnGroupWidths.left + 'px'">
         <datatable-body-cell
-          *ngFor="let column of state.columnsByPin.left"
+          *ngFor="let column of state.columnsByPin.left; trackBy:column?.$$id"
           [row]="row"
           [column]="column">
         </datatable-body-cell>
@@ -23,7 +23,7 @@ import { StateService } from '../../services/State';
         [ngStyle]="stylesByGroup('center')"
         *ngIf="state.columnsByPin.center.length">
         <datatable-body-cell
-          *ngFor="let column of state.columnsByPin.center"
+          *ngFor="let column of state.columnsByPin.center; trackBy:column?.$$id"
           [row]="row"
           [column]="column">
         </datatable-body-cell>
@@ -34,7 +34,7 @@ import { StateService } from '../../services/State';
         [ngStyle]="stylesByGroup('right')"
         [style.width]="state.columnGroupWidths.right + 'px'">
         <datatable-body-cell
-          *ngFor="let column of state.columnsByPin.right"
+          *ngFor="let column of state.columnsByPin.right; trackBy:column?.$$id"
           [row]="row"
           [column]="column">
         </datatable-body-cell>
