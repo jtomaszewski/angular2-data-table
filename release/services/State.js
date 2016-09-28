@@ -23,8 +23,18 @@ var StateService = (function () {
         this.offsetX = 0;
         this.offsetY = 0;
         this.innerWidth = 0;
-        this.bodyHeight = 300;
+        this.selectedIdentities = [];
     }
+    Object.defineProperty(StateService.prototype, "bodyHeight", {
+        get: function () {
+            return this.bodyheight || (this.options.tableHeight - this.options.headerHeight - this.options.footerHeight);
+        },
+        set: function (value) {
+            this.bodyheight = value;
+        },
+        enumerable: true,
+        configurable: true
+    });
     Object.defineProperty(StateService.prototype, "columnsByPin", {
         get: function () {
             return column_1.columnsByPin(this.options.columns);
@@ -84,23 +94,22 @@ var StateService = (function () {
         enumerable: true,
         configurable: true
     });
+    Object.defineProperty(StateService.prototype, "selected", {
+        get: function () {
+            var _this = this;
+            return this.rows.filter(function (row) { return _this.isRowSelected(row); });
+        },
+        enumerable: true,
+        configurable: true
+    });
     StateService.prototype.setSelected = function (selected) {
-        if (!this.selected) {
-            this.selected = selected || [];
-        }
-        else {
-            this.selected.splice(0, this.selected.length);
-            (_a = this.selected).push.apply(_a, selected);
-        }
+        this.selectedIdentities = (selected || []).map(this.options.rowIdentityFunction);
         this.onSelectionChange.emit(this.selected);
         return this;
-        var _a;
     };
     StateService.prototype.setRows = function (rows) {
-        if (rows) {
-            this.rows = rows.slice();
-            this.onRowsUpdate.emit(rows);
-        }
+        this.rows = rows ? rows.slice() : [];
+        this.onRowsUpdate.emit(rows);
         return this;
     };
     StateService.prototype.setOptions = function (options) {
@@ -116,6 +125,10 @@ var StateService = (function () {
             limit: this.pageSize,
             count: this.rowCount
         });
+    };
+    StateService.prototype.isRowSelected = function (row) {
+        var rowIdentity = this.options.rowIdentityFunction(row);
+        return this.selectedIdentities.indexOf(rowIdentity) !== -1;
     };
     StateService.prototype.nextSort = function (column) {
         var idx = this.options.sorts.findIndex(function (s) {
