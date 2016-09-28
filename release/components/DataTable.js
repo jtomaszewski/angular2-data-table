@@ -65,35 +65,8 @@ var DataTable = (function () {
             this.state.setSelected(changes.selected.currentValue);
         }
     };
-    DataTable.prototype.ngDoCheck = function () {
-        if (this.rowDiffer.diff(this.rows)) {
-            this.state.setRows(this.rows);
-            this.onRowsUpdate.emit(this.rows);
-        }
-        this.checkColumnChanges();
-    };
     DataTable.prototype.ngOnDestroy = function () {
         this.pageSubscriber.unsubscribe();
-    };
-    DataTable.prototype.checkColumnChanges = function () {
-        var colDiff = this.colDiffer.diff(this.options.columns);
-        if (colDiff) {
-            var chngd_1 = false;
-            colDiff.forEachAddedItem(function () {
-                chngd_1 = true;
-                return false;
-            });
-            if (!chngd_1) {
-                colDiff.forEachRemovedItem(function () {
-                    chngd_1 = true;
-                    return false;
-                });
-            }
-            // if a column was added or removed
-            // we need to re-adjust columns
-            if (chngd_1)
-                this.adjustColumns();
-        }
     };
     DataTable.prototype.adjustSizes = function () {
         var _a = this.element.getBoundingClientRect(), height = _a.height, width = _a.width;
@@ -233,7 +206,7 @@ var DataTable = (function () {
         core_1.Component({
             selector: 'datatable',
             providers: [State_1.StateService],
-            template: "\n    <div\n      visibility-observer\n      (onVisibilityChange)=\"adjustSizes()\">\n      <datatable-header\n        (onColumnChange)=\"onColumnChange.emit($event)\">\n      </datatable-header>\n      <datatable-body\n        (onRowClick)=\"onRowClick.emit($event)\"\n        (onRowSelect)=\"onRowSelect($event)\">\n      </datatable-body>\n      <datatable-footer\n        (onPageChange)=\"state.setPage($event)\">\n      </datatable-footer>\n    </div>\n  "
+            template: "\n    <div\n      visibility-observer\n      (onVisibilityChange)=\"adjustSizes()\">\n      <datatable-header\n        *ngIf=\"state.options.headerHeight\"\n        (onColumnChange)=\"onColumnChange.emit($event)\">\n      </datatable-header>\n      <datatable-body\n        (onRowClick)=\"onRowClick.emit($event)\"\n        (onRowSelect)=\"onRowSelect($event)\">\n      </datatable-body>\n      <datatable-footer\n        *ngIf=\"state.options.footerHeight\"\n        (onPageChange)=\"state.setPage($event)\">\n      </datatable-footer>\n    </div>\n  "
         }),
         __param(0, core_1.Host()), 
         __metadata('design:paramtypes', [State_1.StateService, core_1.Renderer, core_1.ElementRef, core_1.KeyValueDiffers])
