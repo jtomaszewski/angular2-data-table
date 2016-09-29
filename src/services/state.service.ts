@@ -9,6 +9,7 @@ export class StateService {
 
   options: TableOptions;
   rows: Array<any> = [];
+  selected: Array<any> = [];
 
   onSortChange: EventEmitter<any> = new EventEmitter();
   onSelectionChange: EventEmitter<any> = new EventEmitter();
@@ -77,12 +78,13 @@ export class StateService {
     return { first, last };
   }
 
-  get selected(): any[] {
-    return this.rows.filter(row => this.isRowSelected(row));
+  private cacheSelected(): void {
+    this.selected = this.rows.filter(row => this.isRowSelected(row));
   }
 
   setSelected(selected: any[]): StateService {
     this.selectedIdentities = (selected || []).map(this.options.rowIdentityFunction);
+    this.cacheSelected();
     this.onSelectionChange.emit(this.selected);
 
     return this;
@@ -90,6 +92,7 @@ export class StateService {
 
   setRows(rows: any[]): StateService {
     this.rows = rows ? [...rows] : [];
+    this.cacheSelected();
     this.onRowsUpdate.emit(rows);
 
     return this;
