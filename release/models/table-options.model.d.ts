@@ -7,6 +7,7 @@ export declare class TableOptions {
     scrollbarV: boolean;
     scrollbarH: boolean;
     rowHeight: number;
+    rowIdentityFunction: (x: any) => any;
     columnMode: ColumnMode;
     loadingMessage: string;
     emptyMessage: string;
@@ -19,6 +20,7 @@ export declare class TableOptions {
     offset: number;
     loadingIndicator: boolean;
     selectionType: SelectionType;
+    mutateSelectionState: boolean;
     reorderable: boolean;
     sortType: SortType;
     sorts: Array<Sort>;

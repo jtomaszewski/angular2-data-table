@@ -11,6 +11,11 @@ var TableOptions = (function () {
         // The row height; which is necessary
         // to calculate the height for the lazy rendering.
         this.rowHeight = 30;
+        // This will be used when displaying or selecting rows:
+        // when tracking/comparing them, we'll use the value of this fn,
+        // instead of comparing the objects directly
+        // (`fn(x) === fn(y)` instead of `x === y`)
+        this.rowIdentityFunction = (function (x) { return x; });
         // flex
         // force
         // standard
@@ -39,6 +44,16 @@ var TableOptions = (function () {
         this.offset = 0;
         // Loading indicator
         this.loadingIndicator = false;
+        // Should we mutate the [selected] array on our own,
+        // or just publish the selection events?
+        //
+        // True is the old behaviour - after selecting the row,
+        // it will automatically update the selected's array.
+        //
+        // If false, DataTable component will just propagate
+        // a onSelectionChange event: after that, you will have
+        // to change the selected's array value on your own.
+        this.mutateSelectionState = true;
         // if you can reorder columns
         this.reorderable = true;
         // type of sorting

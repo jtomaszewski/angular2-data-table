@@ -602,6 +602,11 @@ var TableOptions = (function () {
         // The row height; which is necessary
         // to calculate the height for the lazy rendering.
         this.rowHeight = 30;
+        // This will be used when displaying or selecting rows:
+        // when tracking/comparing them, we'll use the value of this fn,
+        // instead of comparing the objects directly
+        // (`fn(x) === fn(y)` instead of `x === y`)
+        this.rowIdentityFunction = (function (x) { return x; });
         // flex
         // force
         // standard
@@ -630,6 +635,16 @@ var TableOptions = (function () {
         this.offset = 0;
         // Loading indicator
         this.loadingIndicator = false;
+        // Should we mutate the [selected] array on our own,
+        // or just publish the selection events?
+        //
+        // True is the old behaviour - after selecting the row,
+        // it will automatically update the selected's array.
+        //
+        // If false, DataTable component will just propagate
+        // a onSelectionChange event: after that, you will have
+        // to change the selected's array value on your own.
+        this.mutateSelectionState = true;
         // if you can reorder columns
         this.reorderable = true;
         // type of sorting
@@ -789,11 +804,22 @@ var StateService = (function () {
         this.offsetX = 0;
         this.offsetY = 0;
         this.innerWidth = 0;
+        this.selectedIdentities = [];
         // this body height is a placeholder
         // its only used internally, if you
         // need to set the tables element style height
-        this.bodyHeight = 300;
+        this._bodyHeight = 300;
     }
+    Object.defineProperty(StateService.prototype, "bodyHeight", {
+        get: function () {
+            return this._bodyHeight || (this.options.tableHeight - this.options.headerHeight - this.options.footerHeight);
+        },
+        set: function (value) {
+            this._bodyHeight = value;
+        },
+        enumerable: true,
+        configurable: true
+    });
     Object.defineProperty(StateService.prototype, "columnsByPin", {
         get: function () {
             return columnsByPin(this.options.columns);
@@ -853,23 +879,20 @@ var StateService = (function () {
         enumerable: true,
         configurable: true
     });
+    StateService.prototype.cacheSelected = function () {
+        var _this = this;
+        this.selected = this.rows.filter(function (row) { return _this.isRowSelected(row); });
+    };
     StateService.prototype.setSelected = function (selected) {
-        if (!this.selected) {
-            this.selected = selected || [];
-        }
-        else {
-            this.selected.splice(0, this.selected.length);
-            (_a = this.selected).push.apply(_a, selected);
-        }
+        this.selectedIdentities = (selected || []).map(this.options.rowIdentityFunction);
+        this.cacheSelected();
         this.onSelectionChange.emit(this.selected);
         return this;
-        var _a;
     };
     StateService.prototype.setRows = function (rows) {
-        if (rows) {
-            this.rows = rows.slice();
-            this.onRowsUpdate.emit(rows);
-        }
+        this.rows = rows ? rows.slice() : [];
+        this.cacheSelected();
+        this.onRowsUpdate.emit(rows);
         return this;
     };
     StateService.prototype.setOptions = function (options) {
@@ -885,6 +908,10 @@ var StateService = (function () {
             limit: this.pageSize,
             count: this.rowCount
         });
+    };
+    StateService.prototype.isRowSelected = function (row) {
+        var rowIdentity = this.options.rowIdentityFunction(row);
+        return this.selectedIdentities.indexOf(rowIdentity) !== -1;
     };
     StateService.prototype.nextSort = function (column) {
         var idx = this.options.sorts.findIndex(function (s) {
@@ -1035,7 +1062,9 @@ var DataTable = (function () {
         }
     };
     DataTable.prototype.onRowSelect = function (event) {
-        this.state.setSelected(event);
+        if (this.options.mutateSelectionState) {
+            this.state.setSelected(event);
+        }
         this.onSelectionChange.emit(event);
     };
     DataTable.prototype.resize = function () {
@@ -1329,6 +1358,11 @@ var Draggable = (function () {
         this.dragging = false;
         this.element = element.nativeElement;
     }
+    Draggable.prototype.ngOnDestroy = function () {
+        if (this.subscription) {
+            this.subscription.unsubscribe();
+        }
+    };
     Draggable.prototype.onMouseup = function (event) {
         this.dragging = false;
         this.element.classList.remove('dragging');
@@ -1591,7 +1625,6 @@ var Resizeable = (function () {
     function Resizeable(element) {
         this.resizeEnabled = true;
         this.onResize = new _angular_core.EventEmitter();
-        this.prevScreenX = 0;
         this.resizing = false;
         this.element = element.nativeElement;
         if (this.resizeEnabled) {
@@ -1600,6 +1633,11 @@ var Resizeable = (function () {
             this.element.appendChild(node);
         }
     }
+    Resizeable.prototype.ngOnDestroy = function () {
+        if (this.subscription) {
+            this.subscription.unsubscribe();
+        }
+    };
     Resizeable.prototype.onMouseup = function () {
         this.resizing = false;
         if (this.subscription) {
@@ -1610,18 +1648,18 @@ var Resizeable = (function () {
     Resizeable.prototype.onMousedown = function (event) {
         var _this = this;
         var isHandle = event.target.classList.contains('resize-handle');
+        var initialWidth = this.element.clientWidth;
+        var mouseDownScreenX = event.screenX;
         if (isHandle) {
             event.stopPropagation();
             this.resizing = true;
             this.subscription = rxjs_Rx.Observable.fromEvent(document, 'mousemove')
-                .subscribe(function (e) { return _this.move(e); });
+                .subscribe(function (e) { return _this.move(e, initialWidth, mouseDownScreenX); });
         }
     };
-    Resizeable.prototype.move = function (event) {
-        var movementX = event.movementX || event.mozMovementX || (event.screenX - this.prevScreenX);
-        var width = this.element.clientWidth;
-        var newWidth = width + (movementX || 0);
-        this.prevScreenX = event.screenX;
+    Resizeable.prototype.move = function (event, initialWidth, mouseDownScreenX) {
+        var movementX = event.screenX - mouseDownScreenX;
+        var newWidth = initialWidth + movementX;
         var overMinWidth = !this.minWidth || newWidth >= this.minWidth;
         var underMaxWidth = !this.maxWidth || newWidth <= this.maxWidth;
         if (overMinWidth && underMaxWidth) {
@@ -1945,15 +1983,13 @@ var DataTableBody = (function () {
         var selections = [];
         if (multiShift || multiClick) {
             if (multiShift && event.shiftKey) {
-                var selected = this.state.selected.slice();
-                selections = selectRowsBetween(selected, this.rows, index, this.prevIndex);
+                selections = selectRowsBetween(this.state.selected, this.rows, index, this.prevIndex);
             }
             else if (multiShift && !event.shiftKey) {
                 selections.push(row);
             }
             else {
-                var selected = this.state.selected.slice();
-                selections = selectRows(selected, row);
+                selections = selectRows(this.state.selected, row);
             }
         }
         else {
@@ -2065,8 +2101,7 @@ var DataTableBodyRow = (function () {
     }
     Object.defineProperty(DataTableBodyRow.prototype, "isSelected", {
         get: function () {
-            return this.state.selected &&
-                this.state.selected.indexOf(this.row) > -1;
+            return this.state.isRowSelected(this.row);
         },
         enumerable: true,
         configurable: true

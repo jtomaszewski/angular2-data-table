@@ -21,19 +21,19 @@ export class StateService {
   offsetY: number = 0;
   innerWidth: number = 0;
 
+  private selectedIdentities: Array<any> = [];
+
   // this body height is a placeholder
   // its only used internally, if you
   // need to set the tables element style height
-  bodyHeight: number = 300;
-  private selectedIdentities: Array<any> = [];
+  private _bodyHeight: number = 300;
 
-  private _bodyHeight: number;
+  get bodyHeight(): number {
+    return this._bodyHeight || (this.options.tableHeight - this.options.headerHeight - this.options.footerHeight);
+  }
   set bodyHeight(value: number)
   {
     this._bodyHeight = value;
-  }
-  get bodyHeight(): number {
-    return this._bodyHeight || (this.options.tableHeight - this.options.headerHeight - this.options.footerHeight);
   }
 
   get columnsByPin() {

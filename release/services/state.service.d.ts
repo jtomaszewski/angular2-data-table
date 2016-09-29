@@ -13,6 +13,8 @@ export declare class StateService {
     offsetX: number;
     offsetY: number;
     innerWidth: number;
+    private selectedIdentities;
+    private _bodyHeight;
     bodyHeight: number;
     readonly columnsByPin: {
         left: any[];
@@ -31,12 +33,14 @@ export declare class StateService {
         first: number;
         last: number;
     };
+    private cacheSelected();
     setSelected(selected: any[]): StateService;
-    setRows(rows: Array<any>): StateService;
+    setRows(rows: any[]): StateService;
     setOptions(options: TableOptions): StateService;
     setPage({type, value}: {
         type: any;
         value: any;
     }): void;
+    isRowSelected(row: any): boolean;
     nextSort(column: TableColumn): void;
 }
