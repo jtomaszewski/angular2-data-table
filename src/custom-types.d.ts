@@ -5,6 +5,11 @@ declare var APP_VERSION: string;
 declare var IS_PRODUCTION: boolean;
 declare var HMR: boolean;
 
+// webpack hmr
+interface NodeModule {
+  hot: any;
+}
+
 interface ErrorStackTraceLimit {
   stackTraceLimit: number;
 }
