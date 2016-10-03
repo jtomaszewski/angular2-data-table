@@ -53,6 +53,7 @@ export class Resizeable {
     if (isHandle) {
       event.stopPropagation();
       this.resizing = true;
+      this.prevScreenX = null;
 
       this.subscription = Observable.fromEvent(document, 'mousemove')
         .subscribe((e) => this.move(e, initialWidth, mouseDownScreenX));
