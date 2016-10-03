@@ -86,8 +86,7 @@ function webpackConfig(options = {}) {
         {
           test: /\.ts$/,
           loaders: [
-            'awesome-typescript-loader',
-            '@angularclass/hmr-loader'
+            'awesome-typescript-loader'
           ],
           exclude: /(node_modules)/
         },
