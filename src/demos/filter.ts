@@ -52,7 +52,7 @@ export class App {
       this.temp = [...data];
 
       // push our inital complete list
-      this.rows.push(...data);
+      this.rows = [...data];
     });
   }
 
@@ -68,16 +68,9 @@ export class App {
   }
 
   updateFilter(val) {
-    // remove existing
-    this.rows.splice(0, this.rows.length);
-
-    // filter our data
-    let temp = this.temp.filter(function(d) {
+    this.rows = this.temp.filter(function(d) {
       return d.name.toLowerCase().indexOf(val) !== -1 || !val;
     });
-
-    // update the rows
-    this.rows.push(...temp);
   }
 
 }

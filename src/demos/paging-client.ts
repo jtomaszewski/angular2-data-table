@@ -39,7 +39,7 @@ export class App {
 
   constructor() {
     this.fetch((data) => {
-      this.rows.push(...data);
+      this.rows = [...data];
     });
   }
 

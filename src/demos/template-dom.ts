@@ -54,7 +54,7 @@ export class App {
 
   constructor() {
     this.fetch((data) => {
-      this.rows.push(...data.splice(0, 5));
+      this.rows = data.splice(0, 5);
     });
   }
 

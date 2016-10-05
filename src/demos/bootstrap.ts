@@ -53,7 +53,6 @@ export class App {
   }
 }
 
-
 let app = (<any>window).app;
 
 // create the app and set as a global variable

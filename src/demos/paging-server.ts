@@ -57,9 +57,11 @@ export class App {
       // this.rows.push(...paged)
       // this.rows.splice(start, 0, ...paged);
 
+      let rows = [...this.rows];
       for (let i = start; i < end; i++) {
-        this.rows[i] = results[i];
+        rows[i] = results[i];
       }
+      this.rows = rows;
 
       console.log('updated', start, end, this.rows);
     });
