@@ -78,10 +78,6 @@ export class StateService {
     return { first, last };
   }
 
-  private cacheSelected(): void {
-    this.selected = this.rows.filter(row => this.isRowSelected(row));
-  }
-
   setSelected(selected: any[]): StateService {
     this.selectedIdentities = (selected || []).map(this.options.rowIdentityFunction);
     this.cacheSelected();
@@ -148,6 +144,10 @@ export class StateService {
     }
 
     this.onSortChange.emit({ column });
+  }
+
+  private cacheSelected(): void {
+    this.selected = this.rows.filter(row => this.isRowSelected(row));
   }
 
 }
