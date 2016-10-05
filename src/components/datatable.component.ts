@@ -5,14 +5,11 @@ import {
   ElementRef,
   EventEmitter,
   HostListener,
-  KeyValueDiffers,
   ContentChildren,
   OnInit,
   OnChanges,
   QueryList,
-  DoCheck,
   AfterViewInit,
-  IterableDiffer,
   HostBinding,
   Host,
   Renderer
@@ -46,7 +43,7 @@ import { StateService } from '../services';
     </div>
   `
 })
-export class DataTable implements OnInit, OnChanges, DoCheck, AfterViewInit {
+export class DataTable implements OnInit, OnChanges, AfterViewInit {
 
   @Input() options: TableOptions;
   @Input() rows: any[];
@@ -61,21 +58,15 @@ export class DataTable implements OnInit, OnChanges, DoCheck, AfterViewInit {
   @ContentChildren(DataTableColumn) columns: QueryList<DataTableColumn>;
 
   private element: HTMLElement;
-  private rowDiffer: IterableDiffer;
-  private colDiffer: IterableDiffer;
   private pageSubscriber: any;
 
   constructor(
     @Host() public state: StateService,
     renderer: Renderer,
-    element: ElementRef,
-    differs: KeyValueDiffers) {
+    element: ElementRef) {
 
     this.element = element.nativeElement;
     renderer.setElementClass(this.element, 'datatable', true);
-
-    this.rowDiffer = differs.find({}).create(null);
-    this.colDiffer = differs.find({}).create(null);
   }
 
   ngOnInit(): void {
@@ -123,42 +114,6 @@ export class DataTable implements OnInit, OnChanges, DoCheck, AfterViewInit {
 
     if (changes.hasOwnProperty('selected')) {
       this.state.setSelected(changes.selected.currentValue);
-    }
-  }
-
-  ngDoCheck() {
-    if (this.rowDiffer.diff(this.rows)) {
-      this.state.setRows(this.rows);
-      this.onRowsUpdate.emit(this.rows);
-    }
-
-    this.checkColumnChanges();
-  }
-
-  ngOnDestroy() {
-    this.pageSubscriber.unsubscribe();
-  }
-
-  checkColumnChanges() {
-    const colDiff = this.colDiffer.diff(this.options.columns);
-
-    if (colDiff) {
-      let chngd: boolean = false;
-      colDiff.forEachAddedItem(() => {
-        chngd = true;
-        return false;
-      });
-
-      if (!chngd) {
-        colDiff.forEachRemovedItem(() => {
-          chngd = true;
-          return false;
-        });
-      }
-
-      // if a column was added or removed
-      // we need to re-adjust columns
-      if (chngd) this.adjustColumns();
     }
   }
 
