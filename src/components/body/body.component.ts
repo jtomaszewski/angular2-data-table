@@ -114,7 +114,9 @@ export class DataTableBody implements OnInit, OnDestroy {
     }));
 
     this.sub.add(this.state.onSortChange.subscribe(() => {
-      this.scroller.setOffset(0);
+      if (this.state.options.scrollbarV) {
+        this.scroller.setOffset(0);
+      }
     }));
   }
 
