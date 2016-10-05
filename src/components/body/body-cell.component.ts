@@ -1,4 +1,12 @@
-import { Component, Input, PipeTransform, HostBinding, Renderer, ElementRef } from '@angular/core';
+import {
+  Component, 
+  Input,
+  PipeTransform,
+  HostBinding,
+  Renderer,
+  ElementRef,
+  ChangeDetectionStrategy
+} from '@angular/core';
 
 import { TableColumn } from '../../models';
 import { deepValueGetter } from '../../utils';
@@ -18,12 +26,14 @@ import { StateService } from '../../services';
         [ngOutletContext]="{ value: value, row: row, column: column }">
       </template>
     </div>
-  `
+  `,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DataTableBodyCell {
 
   @Input() column: TableColumn;
   @Input() row: any;
+  @Input() rowHeight: number;
 
   constructor(element: ElementRef, renderer: Renderer, private state: StateService) {
     renderer.setElementClass(element.nativeElement, 'datatable-body-cell', true);
@@ -41,9 +51,8 @@ export class DataTableBodyCell {
   }
 
   @HostBinding('style.height') get height(): any {
-    const height = this.state.options.rowHeight;
-    if(isNaN(height)) return height;
-    return height + 'px';
+    if(isNaN(this.rowHeight)) return this.rowHeight;
+    return this.rowHeight + 'px';
   }
 
 }

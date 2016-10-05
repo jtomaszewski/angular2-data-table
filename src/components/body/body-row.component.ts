@@ -14,7 +14,8 @@ import { StateService } from '../../services';
         <datatable-body-cell
           *ngFor="let column of state.columnsByPin.left; trackBy: trackColBy"
           [row]="row"
-          [column]="column">
+          [column]="column"
+          [rowHeight]="state.options.rowHeight">
         </datatable-body-cell>
       </div>
       <div
@@ -25,7 +26,8 @@ import { StateService } from '../../services';
         <datatable-body-cell
           *ngFor="let column of state.columnsByPin.center; trackBy: trackColBy"
           [row]="row"
-          [column]="column">
+          [column]="column"
+          [rowHeight]="state.options.rowHeight">
         </datatable-body-cell>
       </div>
       <div
@@ -36,7 +38,8 @@ import { StateService } from '../../services';
         <datatable-body-cell
           *ngFor="let column of state.columnsByPin.right; trackBy: trackColBy"
           [row]="row"
-          [column]="column">
+          [column]="column"
+          [rowHeight]="state.options.rowHeight">
         </datatable-body-cell>
       </div>
     </div>
