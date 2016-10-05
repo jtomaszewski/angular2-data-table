@@ -24,23 +24,25 @@ import { Scroller } from '../../directives';
         *ngIf="state.options.loadingIndicator">
       </datatable-progress>
       <div
+        *ngIf="state.rows.length"
         scroller
         (onScroll)="onBodyScroll($event)"
-        *ngIf="state.rows.length"
         [rowHeight]="state.options.rowHeight"
         [scrollbarV]="state.options.scrollbarV"
         [scrollbarH]="state.options.scrollbarH"
         [count]="state.rowCount"
         [scrollWidth]="state.columnGroupWidths.total">
         <datatable-body-row
+          *ngFor="let row of rows; let i = index; trackBy: trackRowBy"
+          [row]="row"
+          [rowHeight]="state.options.rowHeight"
           [ngStyle]="getRowsStyles(row)"
           [style.height]="state.options.rowHeight + 'px'"
-          *ngFor="let row of rows; let i = index; trackBy: trackRowBy"
           [attr.tabindex]="i"
           (click)="rowClicked($event, i, row)"
           (dblclick)="rowClicked($event, i, row)"
           (keydown)="rowKeydown($event, i, row)"
-          [row]="row"
+          [class.active]="state.isRowSelected(row)"
           [class.datatable-row-even]="row.$$index % 2 === 0"
           [class.datatable-row-odd]="row.$$index % 2 !== 0">
         </datatable-body-row>

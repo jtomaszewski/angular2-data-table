@@ -1,4 +1,10 @@
-import { Component, Input, HostBinding, ElementRef, Renderer } from '@angular/core';
+import {
+  Component,
+  Input,
+  ElementRef,
+  Renderer,
+  ChangeDetectionStrategy
+} from '@angular/core';
 import { translateXY } from '../../utils';
 import { StateService } from '../../services';
 
@@ -15,7 +21,7 @@ import { StateService } from '../../services';
           *ngFor="let column of state.columnsByPin.left; trackBy: trackColBy"
           [row]="row"
           [column]="column"
-          [rowHeight]="state.options.rowHeight">
+          [rowHeight]="rowHeight">
         </datatable-body-cell>
       </div>
       <div
@@ -27,7 +33,7 @@ import { StateService } from '../../services';
           *ngFor="let column of state.columnsByPin.center; trackBy: trackColBy"
           [row]="row"
           [column]="column"
-          [rowHeight]="state.options.rowHeight">
+          [rowHeight]="rowHeight">
         </datatable-body-cell>
       </div>
       <div
@@ -39,20 +45,17 @@ import { StateService } from '../../services';
           *ngFor="let column of state.columnsByPin.right; trackBy: trackColBy"
           [row]="row"
           [column]="column"
-          [rowHeight]="state.options.rowHeight">
+          [rowHeight]="rowHeight">
         </datatable-body-cell>
       </div>
     </div>
-  `
+  `,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DataTableBodyRow {
 
   @Input() row: any;
-
-  @HostBinding('class.active')
-  get isSelected() {
-    return this.state.isRowSelected(this.row);
-  }
+  @Input() rowHeight: number;
 
   constructor(public state: StateService, element: ElementRef, renderer: Renderer) {
     renderer.setElementClass(element.nativeElement, 'datatable-body-row', true);
