@@ -950,7 +950,7 @@ var StateService = (function () {
 }());
 
 var DataTable = (function () {
-    function DataTable(state, renderer, element, differs) {
+    function DataTable(state, renderer, element) {
         this.state = state;
         this.onPageChange = new _angular_core.EventEmitter();
         this.onRowsUpdate = new _angular_core.EventEmitter();
@@ -959,8 +959,6 @@ var DataTable = (function () {
         this.onColumnChange = new _angular_core.EventEmitter();
         this.element = element.nativeElement;
         renderer.setElementClass(this.element, 'datatable', true);
-        this.rowDiffer = differs.find({}).create(null);
-        this.colDiffer = differs.find({}).create(null);
     }
     DataTable.prototype.ngOnInit = function () {
         var _this = this;
@@ -1003,36 +1001,6 @@ var DataTable = (function () {
         }
         if (changes.hasOwnProperty('selected')) {
             this.state.setSelected(changes.selected.currentValue);
-        }
-    };
-    DataTable.prototype.ngDoCheck = function () {
-        if (this.rowDiffer.diff(this.rows)) {
-            this.state.setRows(this.rows);
-            this.onRowsUpdate.emit(this.rows);
-        }
-        this.checkColumnChanges();
-    };
-    DataTable.prototype.ngOnDestroy = function () {
-        this.pageSubscriber.unsubscribe();
-    };
-    DataTable.prototype.checkColumnChanges = function () {
-        var colDiff = this.colDiffer.diff(this.options.columns);
-        if (colDiff) {
-            var chngd_1 = false;
-            colDiff.forEachAddedItem(function () {
-                chngd_1 = true;
-                return false;
-            });
-            if (!chngd_1) {
-                colDiff.forEachRemovedItem(function () {
-                    chngd_1 = true;
-                    return false;
-                });
-            }
-            // if a column was added or removed
-            // we need to re-adjust columns
-            if (chngd_1)
-                this.adjustColumns();
         }
     };
     DataTable.prototype.adjustSizes = function () {
@@ -1178,10 +1146,10 @@ var DataTable = (function () {
             template: "\n    <div\n      visibility-observer\n      (onVisibilityChange)=\"adjustSizes()\">\n      <datatable-header\n        *ngIf=\"state.options.headerHeight\"\n        (onColumnChange)=\"onColumnChange.emit($event)\">\n      </datatable-header>\n      <datatable-body\n        (onRowClick)=\"onRowClick.emit($event)\"\n        (onRowSelect)=\"onRowSelect($event)\">\n      </datatable-body>\n      <datatable-footer\n         *ngIf=\"state.options.footerHeight\"\n        (onPageChange)=\"state.setPage($event)\">\n      </datatable-footer>\n    </div>\n  "
         }),
         __param(0, _angular_core.Host()), 
-        __metadata('design:paramtypes', [(typeof (_h = typeof StateService !== 'undefined' && StateService) === 'function' && _h) || Object, (typeof (_j = typeof _angular_core.Renderer !== 'undefined' && _angular_core.Renderer) === 'function' && _j) || Object, (typeof (_k = typeof _angular_core.ElementRef !== 'undefined' && _angular_core.ElementRef) === 'function' && _k) || Object, (typeof (_l = typeof _angular_core.KeyValueDiffers !== 'undefined' && _angular_core.KeyValueDiffers) === 'function' && _l) || Object])
+        __metadata('design:paramtypes', [(typeof (_h = typeof StateService !== 'undefined' && StateService) === 'function' && _h) || Object, (typeof (_j = typeof _angular_core.Renderer !== 'undefined' && _angular_core.Renderer) === 'function' && _j) || Object, (typeof (_k = typeof _angular_core.ElementRef !== 'undefined' && _angular_core.ElementRef) === 'function' && _k) || Object])
     ], DataTable);
     return DataTable;
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
 }());
 
 var DataTableHeader = (function () {
@@ -1897,7 +1865,9 @@ var DataTableBody = (function () {
             _this.hideIndicator();
         }));
         this.sub.add(this.state.onSortChange.subscribe(function () {
-            _this.scroller.setOffset(0);
+            if (_this.state.options.scrollbarV) {
+                _this.scroller.setOffset(0);
+            }
         }));
     };
     DataTableBody.prototype.trackRowBy = function (index, obj) {

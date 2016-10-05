@@ -1,8 +1,8 @@
-import { ElementRef, EventEmitter, KeyValueDiffers, OnInit, OnChanges, QueryList, DoCheck, AfterViewInit, Renderer } from '@angular/core';
+import { ElementRef, EventEmitter, OnInit, OnChanges, QueryList, AfterViewInit, Renderer } from '@angular/core';
 import { TableOptions } from '../models';
 import { DataTableColumn } from './datatable-column.directive';
 import { StateService } from '../services';
-export declare class DataTable implements OnInit, OnChanges, DoCheck, AfterViewInit {
+export declare class DataTable implements OnInit, OnChanges, AfterViewInit {
     state: StateService;
     options: TableOptions;
     rows: any[];
@@ -14,16 +14,11 @@ export declare class DataTable implements OnInit, OnChanges, DoCheck, AfterViewI
     onColumnChange: EventEmitter<any>;
     columns: QueryList<DataTableColumn>;
     private element;
-    private rowDiffer;
-    private colDiffer;
     private pageSubscriber;
-    constructor(state: StateService, renderer: Renderer, element: ElementRef, differs: KeyValueDiffers);
+    constructor(state: StateService, renderer: Renderer, element: ElementRef);
     ngOnInit(): void;
     ngAfterViewInit(): void;
     ngOnChanges(changes: any): void;
-    ngDoCheck(): void;
-    ngOnDestroy(): void;
-    checkColumnChanges(): void;
     adjustSizes(): void;
     adjustColumns(forceIdx?: number): void;
     onRowSelect(event: any): void;
