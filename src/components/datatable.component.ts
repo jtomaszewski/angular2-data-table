@@ -12,7 +12,8 @@ import {
   AfterViewInit,
   HostBinding,
   Host,
-  Renderer
+  Renderer,
+  ChangeDetectorRef
 } from '@angular/core';
 
 import { forceFillColumnWidths, adjustColumnWidths } from '../utils';
@@ -63,7 +64,8 @@ export class DataTable implements OnInit, OnChanges, AfterViewInit {
   constructor(
     @Host() public state: StateService,
     renderer: Renderer,
-    element: ElementRef) {
+    element: ElementRef,
+    private cd: ChangeDetectorRef) {
 
     this.element = element.nativeElement;
     renderer.setElementClass(this.element, 'datatable', true);
@@ -106,6 +108,7 @@ export class DataTable implements OnInit, OnChanges, AfterViewInit {
   ngOnChanges(changes) {
     if (changes.hasOwnProperty('options')) {
       this.state.setOptions(changes.options.currentValue);
+      this.cd.markForCheck();
     }
 
     if (changes.hasOwnProperty('rows')) {
@@ -143,6 +146,8 @@ export class DataTable implements OnInit, OnChanges, AfterViewInit {
     } else if (this.options.columnMode === ColumnMode.flex) {
       adjustColumnWidths(this.options.columns, width);
     }
+
+    this.cd.markForCheck();
   }
 
   onRowSelect(event) {
