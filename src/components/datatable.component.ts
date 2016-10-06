@@ -167,7 +167,9 @@ export class DataTable implements OnInit, OnChanges, AfterViewInit {
 
   @HostListener('window:resize')
   resize() {
-    this.adjustSizes();
+    if (this.state.options.adjustSizesOnWindowResize) {
+      this.adjustSizes();
+    }
   }
 
   @HostBinding('class.fixed-header')

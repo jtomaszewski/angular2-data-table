@@ -51,6 +51,9 @@ export class TableOptions {
   // By default, it will be generated automatically
   minimumTableWidth: number;
 
+  // Automatically recalculate column sizes on window:resize event?
+  adjustSizesOnWindowResize: boolean = true;
+
   // if external paging is turned on
   externalPaging: boolean = false;
 
