@@ -1,4 +1,3 @@
-
 import { EventEmitter } from '@angular/core';
 import { TableOptions, TableColumn } from '../models';
 export interface TableDimensionsI {
@@ -8,8 +7,8 @@ export interface TableDimensionsI {
     innerWidth?: number;
 }
 export declare class StateService {
-    rows: Object[];
-    selected: Object[];
+    rows: any[];
+    selected: any[];
     options: TableOptions;
     dimensions: TableDimensionsI;
     onRowsUpdate: EventEmitter<any>;
@@ -38,10 +37,10 @@ export declare class StateService {
         first: number;
         last: number;
     };
-    setRows(rows: Object[]): StateService;
-    setSelected(selected: Object[]): StateService;
+    setRows(rows: any[]): StateService;
+    setSelected(selected: any[]): StateService;
     setOptions(options: TableOptions): StateService;
-    updateOptions(newOptions: Object): StateService;
+    updateOptions(newOptions: any): StateService;
     updateDimensions(dimensions: TableDimensionsI): void;
     setPage({type, value}: {
         type: any;

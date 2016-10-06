@@ -334,17 +334,19 @@ function scrollbarWidth() {
 ;
 
 function selectRows(selected, row) {
-    var selectedIndex = selected.indexOf(row);
+    var newSelected = selected.slice();
+    var selectedIndex = newSelected.indexOf(row);
     if (selectedIndex > -1) {
-        selected.splice(selectedIndex, 1);
+        newSelected.splice(selectedIndex, 1);
     }
     else {
-        selected.push(row);
+        newSelected.push(row);
     }
-    return selected;
+    return newSelected;
 }
 function selectRowsBetween(selected, rows, index, prevIndex) {
     var reverse = index < prevIndex;
+    var newSelected = selected.slice();
     for (var i = 0, len = rows.length; i < len; i++) {
         var row = rows[i];
         var greater = i >= prevIndex && i <= index;
@@ -363,23 +365,23 @@ function selectRowsBetween(selected, rows, index, prevIndex) {
             };
         }
         if ((reverse && lesser) || (!reverse && greater)) {
-            var idx = selected.indexOf(row);
+            var idx = newSelected.indexOf(row);
             // if reverse shift selection (unselect) and the
             // row is already selected, remove it from selected
             if (reverse && idx > -1) {
-                selected.splice(idx, 1);
+                newSelected.splice(idx, 1);
                 continue;
             }
             // if in the positive range to be added to `selected`, and
             // not already in the selected array, add it
             if (i >= range.start && i < range.end) {
                 if (idx === -1) {
-                    selected.push(row);
+                    newSelected.push(row);
                 }
             }
         }
     }
-    return selected;
+    return newSelected;
 }
 
 // browser detection and prefixing tools
@@ -575,8 +577,7 @@ function orderByComparator(a, b) {
  * @return {Array<any>} results
  */
 function sortRows(rows, dirs) {
-    var temp = rows.slice();
-    return temp.sort(function (a, b) {
+    return rows.slice().sort(function (a, b) {
         for (var _i = 0, dirs_1 = dirs; _i < dirs_1.length; _i++) {
             var _a = dirs_1[_i], prop = _a.prop, dir = _a.dir;
             var comparison = dir !== exports.SortDirection.desc ?
@@ -924,11 +925,9 @@ var StateService = (function () {
         return this.selectedIdentities.indexOf(rowIdentity) !== -1;
     };
     StateService.prototype.resizeColumn = function (column, width) {
-        this.updateOptions({
-            columns: this.options.columns.map(function (c) {
-                return c === column ? new TableColumn(Object.assign({}, c, { width: width })) : c;
-            })
-        });
+        // TODO dont mutate inplace
+        column.width = width;
+        this.options.columns = this.options.columns.slice();
         this.onColumnChange.emit({
             type: 'resize',
             value: column
@@ -938,7 +937,8 @@ var StateService = (function () {
         var columns = this.options.columns.slice();
         columns.splice(prevIndex, 1);
         columns.splice(newIndex, 0, column);
-        this.updateOptions({ columns: columns });
+        // TODO dont mutate inplace
+        this.options.columns = columns;
         this.onColumnChange.emit({
             type: 'reorder',
             value: column
@@ -1008,7 +1008,9 @@ var DataTable = (function () {
         renderer.setElementClass(this.element, 'datatable', true);
         this.state.onColumnChange.subscribe(function (event) {
             _this.onColumnChange.next(event);
-            _this.cd.markForCheck();
+        });
+        this.state.onOptionsUpdate.subscribe(function () {
+            _this.adjustSizes();
         });
     }
     DataTable.prototype.ngOnInit = function () {
@@ -1038,7 +1040,7 @@ var DataTable = (function () {
                 // column objects
                 for (var _i = 0, _a = _this.columns.toArray(); _i < _a.length; _i++) {
                     var col = _a[_i];
-                    _this.options.columns.push(new TableColumn(col));
+                    _this.state.options.columns.push(new TableColumn(col));
                 }
             });
         }
@@ -1046,7 +1048,6 @@ var DataTable = (function () {
     DataTable.prototype.ngOnChanges = function (changes) {
         if (changes.hasOwnProperty('options')) {
             this.state.setOptions(changes.options.currentValue);
-            this.cd.markForCheck();
         }
         if (changes.hasOwnProperty('rows')) {
             this.state.setRows(changes.rows.currentValue);
@@ -1058,34 +1059,34 @@ var DataTable = (function () {
     DataTable.prototype.adjustSizes = function () {
         var _a = this.element.getBoundingClientRect(), height = _a.height, width = _a.width;
         this.state.updateDimensions({
-            innerWidth: Math.floor(width)
+            innerWidth: this.state.options.minimumTableWidth || Math.floor(width)
         });
-        if (this.options.scrollbarV) {
-            if (this.options.headerHeight)
-                height = height - this.options.headerHeight;
-            if (this.options.footerHeight)
-                height = height - this.options.footerHeight;
+        if (this.state.options.scrollbarV) {
+            if (this.state.options.headerHeight)
+                height = height - this.state.options.headerHeight;
+            if (this.state.options.footerHeight)
+                height = height - this.state.options.footerHeight;
             this.state.bodyHeight = height;
         }
         this.adjustColumns();
     };
     DataTable.prototype.adjustColumns = function (forceIdx) {
-        if (!this.options.columns)
+        if (!this.state.options.columns)
             return;
         var width = this.state.dimensions.innerWidth;
-        if (this.options.scrollbarV) {
+        if (this.state.options.scrollbarV) {
             width = width - this.state.dimensions.scrollbarWidth;
         }
-        if (this.options.columnMode === exports.ColumnMode.force) {
-            forceFillColumnWidths(this.options.columns, width, forceIdx);
+        if (this.state.options.columnMode === exports.ColumnMode.force) {
+            forceFillColumnWidths(this.state.options.columns, width, forceIdx);
         }
-        else if (this.options.columnMode === exports.ColumnMode.flex) {
-            adjustColumnWidths(this.options.columns, width);
+        else if (this.state.options.columnMode === exports.ColumnMode.flex) {
+            adjustColumnWidths(this.state.options.columns, width);
         }
-        this.cd.markForCheck();
+        this.state.options.columns = this.state.options.columns.slice();
     };
     DataTable.prototype.onRowSelect = function (event) {
-        if (this.options.mutateSelectionState) {
+        if (this.state.options.mutateSelectionState) {
             this.state.setSelected(event);
         }
         this.onSelectionChange.emit(event);
@@ -1095,7 +1096,7 @@ var DataTable = (function () {
     };
     Object.defineProperty(DataTable.prototype, "isFixedHeader", {
         get: function () {
-            var headerHeight = this.options.headerHeight;
+            var headerHeight = this.state.options.headerHeight;
             return (typeof headerHeight === 'string') ?
                 headerHeight !== 'auto' : true;
         },
@@ -1104,7 +1105,7 @@ var DataTable = (function () {
     });
     Object.defineProperty(DataTable.prototype, "isFixedRow", {
         get: function () {
-            var rowHeight = this.options.rowHeight;
+            var rowHeight = this.state.options.rowHeight;
             return (typeof rowHeight === 'string') ?
                 rowHeight !== 'auto' : true;
         },
@@ -1113,21 +1114,21 @@ var DataTable = (function () {
     });
     Object.defineProperty(DataTable.prototype, "isVertScroll", {
         get: function () {
-            return this.options.scrollbarV;
+            return this.state.options.scrollbarV;
         },
         enumerable: true,
         configurable: true
     });
     Object.defineProperty(DataTable.prototype, "isHorScroll", {
         get: function () {
-            return this.options.scrollbarH;
+            return this.state.options.scrollbarH;
         },
         enumerable: true,
         configurable: true
     });
     Object.defineProperty(DataTable.prototype, "isSelectable", {
         get: function () {
-            return this.options.selectionType !== undefined;
+            return this.state.options.selectionType !== undefined;
         },
         enumerable: true,
         configurable: true
@@ -1981,20 +1982,20 @@ var DataTableBody = (function () {
             return;
         var multiShift = this.state.options.selectionType === exports.SelectionType.multiShift;
         var multiClick = this.state.options.selectionType === exports.SelectionType.multi;
-        var selections = [];
+        var selections;
         if (multiShift || multiClick) {
             if (multiShift && event.shiftKey) {
                 selections = selectRowsBetween(this.state.selected, this.rows, index, this.prevIndex);
             }
             else if (multiShift && !event.shiftKey) {
-                selections.push(row);
+                selections = [row];
             }
             else {
                 selections = selectRows(this.state.selected, row);
             }
         }
         else {
-            selections.push(row);
+            selections = [row];
         }
         this.prevIndex = index;
         this.onRowSelect.emit(selections);

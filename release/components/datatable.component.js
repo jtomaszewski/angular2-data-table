@@ -31,7 +31,9 @@ var DataTable = (function () {
         renderer.setElementClass(this.element, 'datatable', true);
         this.state.onColumnChange.subscribe(function (event) {
             _this.onColumnChange.next(event);
-            _this.cd.markForCheck();
+        });
+        this.state.onOptionsUpdate.subscribe(function () {
+            _this.adjustSizes();
         });
     }
     DataTable.prototype.ngOnInit = function () {
@@ -61,7 +63,7 @@ var DataTable = (function () {
                 // column objects
                 for (var _i = 0, _a = _this.columns.toArray(); _i < _a.length; _i++) {
                     var col = _a[_i];
-                    _this.options.columns.push(new models_1.TableColumn(col));
+                    _this.state.options.columns.push(new models_1.TableColumn(col));
                 }
             });
         }
@@ -69,7 +71,6 @@ var DataTable = (function () {
     DataTable.prototype.ngOnChanges = function (changes) {
         if (changes.hasOwnProperty('options')) {
             this.state.setOptions(changes.options.currentValue);
-            this.cd.markForCheck();
         }
         if (changes.hasOwnProperty('rows')) {
             this.state.setRows(changes.rows.currentValue);
@@ -81,34 +82,34 @@ var DataTable = (function () {
     DataTable.prototype.adjustSizes = function () {
         var _a = this.element.getBoundingClientRect(), height = _a.height, width = _a.width;
         this.state.updateDimensions({
-            innerWidth: Math.floor(width)
+            innerWidth: this.state.options.minimumTableWidth || Math.floor(width)
         });
-        if (this.options.scrollbarV) {
-            if (this.options.headerHeight)
-                height = height - this.options.headerHeight;
-            if (this.options.footerHeight)
-                height = height - this.options.footerHeight;
+        if (this.state.options.scrollbarV) {
+            if (this.state.options.headerHeight)
+                height = height - this.state.options.headerHeight;
+            if (this.state.options.footerHeight)
+                height = height - this.state.options.footerHeight;
             this.state.bodyHeight = height;
         }
         this.adjustColumns();
     };
     DataTable.prototype.adjustColumns = function (forceIdx) {
-        if (!this.options.columns)
+        if (!this.state.options.columns)
             return;
         var width = this.state.dimensions.innerWidth;
-        if (this.options.scrollbarV) {
+        if (this.state.options.scrollbarV) {
             width = width - this.state.dimensions.scrollbarWidth;
         }
-        if (this.options.columnMode === types_1.ColumnMode.force) {
-            utils_1.forceFillColumnWidths(this.options.columns, width, forceIdx);
+        if (this.state.options.columnMode === types_1.ColumnMode.force) {
+            utils_1.forceFillColumnWidths(this.state.options.columns, width, forceIdx);
         }
-        else if (this.options.columnMode === types_1.ColumnMode.flex) {
-            utils_1.adjustColumnWidths(this.options.columns, width);
+        else if (this.state.options.columnMode === types_1.ColumnMode.flex) {
+            utils_1.adjustColumnWidths(this.state.options.columns, width);
         }
-        this.cd.markForCheck();
+        this.state.options.columns = this.state.options.columns.slice();
     };
     DataTable.prototype.onRowSelect = function (event) {
-        if (this.options.mutateSelectionState) {
+        if (this.state.options.mutateSelectionState) {
             this.state.setSelected(event);
         }
         this.onSelectionChange.emit(event);
@@ -118,7 +119,7 @@ var DataTable = (function () {
     };
     Object.defineProperty(DataTable.prototype, "isFixedHeader", {
         get: function () {
-            var headerHeight = this.options.headerHeight;
+            var headerHeight = this.state.options.headerHeight;
             return (typeof headerHeight === 'string') ?
                 headerHeight !== 'auto' : true;
         },
@@ -127,7 +128,7 @@ var DataTable = (function () {
     });
     Object.defineProperty(DataTable.prototype, "isFixedRow", {
         get: function () {
-            var rowHeight = this.options.rowHeight;
+            var rowHeight = this.state.options.rowHeight;
             return (typeof rowHeight === 'string') ?
                 rowHeight !== 'auto' : true;
         },
@@ -136,21 +137,21 @@ var DataTable = (function () {
     });
     Object.defineProperty(DataTable.prototype, "isVertScroll", {
         get: function () {
-            return this.options.scrollbarV;
+            return this.state.options.scrollbarV;
         },
         enumerable: true,
         configurable: true
     });
     Object.defineProperty(DataTable.prototype, "isHorScroll", {
         get: function () {
-            return this.options.scrollbarH;
+            return this.state.options.scrollbarH;
         },
         enumerable: true,
         configurable: true
     });
     Object.defineProperty(DataTable.prototype, "isSelectable", {
         get: function () {
-            return this.options.selectionType !== undefined;
+            return this.state.options.selectionType !== undefined;
         },
         enumerable: true,
         configurable: true

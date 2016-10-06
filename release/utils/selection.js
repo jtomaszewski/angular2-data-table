@@ -1,17 +1,19 @@
 "use strict";
 function selectRows(selected, row) {
-    var selectedIndex = selected.indexOf(row);
+    var newSelected = selected.slice();
+    var selectedIndex = newSelected.indexOf(row);
     if (selectedIndex > -1) {
-        selected.splice(selectedIndex, 1);
+        newSelected.splice(selectedIndex, 1);
     }
     else {
-        selected.push(row);
+        newSelected.push(row);
     }
-    return selected;
+    return newSelected;
 }
 exports.selectRows = selectRows;
 function selectRowsBetween(selected, rows, index, prevIndex) {
     var reverse = index < prevIndex;
+    var newSelected = selected.slice();
     for (var i = 0, len = rows.length; i < len; i++) {
         var row = rows[i];
         var greater = i >= prevIndex && i <= index;
@@ -30,23 +32,23 @@ function selectRowsBetween(selected, rows, index, prevIndex) {
             };
         }
         if ((reverse && lesser) || (!reverse && greater)) {
-            var idx = selected.indexOf(row);
+            var idx = newSelected.indexOf(row);
             // if reverse shift selection (unselect) and the
             // row is already selected, remove it from selected
             if (reverse && idx > -1) {
-                selected.splice(idx, 1);
+                newSelected.splice(idx, 1);
                 continue;
             }
             // if in the positive range to be added to `selected`, and
             // not already in the selected array, add it
             if (i >= range.start && i < range.end) {
                 if (idx === -1) {
-                    selected.push(row);
+                    newSelected.push(row);
                 }
             }
         }
     }
-    return selected;
+    return newSelected;
 }
 exports.selectRowsBetween = selectRowsBetween;
 //# sourceMappingURL=selection.js.map

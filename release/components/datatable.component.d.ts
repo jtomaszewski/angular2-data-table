@@ -4,7 +4,7 @@ import { DataTableColumn } from './datatable-column.directive';
 import { StateService } from '../services';
 export declare class DataTable implements OnInit, OnChanges, AfterViewInit {
     state: StateService;
-    private cd;
+    cd: ChangeDetectorRef;
     options: TableOptions;
     rows: any[];
     selected: any[];

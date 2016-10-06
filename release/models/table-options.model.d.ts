@@ -14,6 +14,7 @@ export declare class TableOptions {
     headerHeight: any;
     footerHeight: number;
     tableHeight: number;
+    minimumTableWidth: number;
     externalPaging: boolean;
     limit: number;
     count: number;

@@ -69,8 +69,7 @@ exports.orderByComparator = orderByComparator;
  * @return {Array<any>} results
  */
 function sortRows(rows, dirs) {
-    var temp = rows.slice();
-    return temp.sort(function (a, b) {
+    return rows.slice().sort(function (a, b) {
         for (var _i = 0, dirs_1 = dirs; _i < dirs_1.length; _i++) {
             var _a = dirs_1[_i], prop = _a.prop, dir = _a.dir;
             var comparison = dir !== types_1.SortDirection.desc ?

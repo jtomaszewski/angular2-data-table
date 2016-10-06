@@ -152,20 +152,20 @@ var DataTableBody = (function () {
             return;
         var multiShift = this.state.options.selectionType === types_1.SelectionType.multiShift;
         var multiClick = this.state.options.selectionType === types_1.SelectionType.multi;
-        var selections = [];
+        var selections;
         if (multiShift || multiClick) {
             if (multiShift && event.shiftKey) {
                 selections = utils_1.selectRowsBetween(this.state.selected, this.rows, index, this.prevIndex);
             }
             else if (multiShift && !event.shiftKey) {
-                selections.push(row);
+                selections = [row];
             }
             else {
                 selections = utils_1.selectRows(this.state.selected, row);
             }
         }
         else {
-            selections.push(row);
+            selections = [row];
         }
         this.prevIndex = index;
         this.onRowSelect.emit(selections);

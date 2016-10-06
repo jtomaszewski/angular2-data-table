@@ -144,11 +144,9 @@ var StateService = (function () {
         return this.selectedIdentities.indexOf(rowIdentity) !== -1;
     };
     StateService.prototype.resizeColumn = function (column, width) {
-        this.updateOptions({
-            columns: this.options.columns.map(function (c) {
-                return c === column ? new models_1.TableColumn(Object.assign({}, c, { width: width })) : c;
-            })
-        });
+        // TODO dont mutate inplace
+        column.width = width;
+        this.options.columns = this.options.columns.slice();
         this.onColumnChange.emit({
             type: 'resize',
             value: column
@@ -158,7 +156,8 @@ var StateService = (function () {
         var columns = this.options.columns.slice();
         columns.splice(prevIndex, 1);
         columns.splice(newIndex, 0, column);
-        this.updateOptions({ columns: columns });
+        // TODO dont mutate inplace
+        this.options.columns = columns;
         this.onColumnChange.emit({
             type: 'reorder',
             value: column
