@@ -2,6 +2,7 @@
 var types_1 = require('../types');
 var TableOptions = (function () {
     function TableOptions(props) {
+        if (props === void 0) { props = {}; }
         // Columns
         this.columns = [];
         // Enable vertical scrollbars

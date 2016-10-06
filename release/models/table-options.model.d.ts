@@ -24,6 +24,6 @@ export declare class TableOptions {
     reorderable: boolean;
     sortType: SortType;
     sorts: Array<Sort>;
-    constructor(props: any);
+    constructor(props?: any);
     validate(): void;
 }

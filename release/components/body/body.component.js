@@ -18,6 +18,7 @@ var DataTableBody = (function () {
         this.state = state;
         this.onRowClick = new core_1.EventEmitter();
         this.onRowSelect = new core_1.EventEmitter();
+        this.trackRowBy = this._trackRowBy.bind(this);
         renderer.setElementClass(element.nativeElement, 'datatable-body', true);
     }
     Object.defineProperty(DataTableBody.prototype, "selectEnabled", {
@@ -42,7 +43,7 @@ var DataTableBody = (function () {
     Object.defineProperty(DataTableBody.prototype, "bodyWidth", {
         get: function () {
             if (this.state.options.scrollbarH) {
-                return this.state.innerWidth + 'px';
+                return this.state.dimensions.innerWidth + 'px';
             }
             else {
                 return '100%';
@@ -73,12 +74,11 @@ var DataTableBody = (function () {
             }
         }));
     };
-    DataTableBody.prototype.trackRowBy = function (index, obj) {
-        return obj.$$index;
-    };
     DataTableBody.prototype.onBodyScroll = function (props) {
-        this.state.offsetY = props.scrollYPos;
-        this.state.offsetX = props.scrollXPos;
+        this.state.updateDimensions({
+            offsetY: props.scrollYPos,
+            offsetX: props.scrollXPos
+        });
         this.updatePage(props.direction);
         this.updateRows();
     };
@@ -108,21 +108,20 @@ var DataTableBody = (function () {
         while (rowIndex < idxs.last && rowIndex < this.state.rowCount) {
             var row = this.state.rows[rowIndex];
             if (row) {
-                row.$$index = rowIndex;
                 this.rows[idx] = row;
             }
             idx++;
             rowIndex++;
         }
     };
-    DataTableBody.prototype.getRowsStyles = function (row) {
+    DataTableBody.prototype.getRowsStyles = function (row, idx) {
         var rowHeight = this.state.options.rowHeight;
         var styles = {
             height: rowHeight + 'px'
         };
         if (this.state.options.scrollbarV) {
-            var idx = row ? row.$$index : 0;
-            var pos = idx * rowHeight;
+            var rowIndex = row ? this.state.indexes.first + idx : 0;
+            var pos = rowIndex * rowHeight;
             utils_1.translateXY(styles, 0, pos);
         }
         return styles;
@@ -176,6 +175,9 @@ var DataTableBody = (function () {
             this.sub.unsubscribe();
         }
     };
+    DataTableBody.prototype._trackRowBy = function (index, row) {
+        return this.state.options.rowIdentityFunction(row);
+    };
     __decorate([
         core_1.Output(), 
         __metadata('design:type', core_1.EventEmitter)
@@ -199,7 +201,7 @@ var DataTableBody = (function () {
     DataTableBody = __decorate([
         core_1.Component({
             selector: 'datatable-body',
-            template: "\n    <div>\n      <datatable-progress\n        *ngIf=\"state.options.loadingIndicator\">\n      </datatable-progress>\n      <div\n        scroller\n        (onScroll)=\"onBodyScroll($event)\"\n        *ngIf=\"state.rows.length\"\n        [rowHeight]=\"state.options.rowHeight\"\n        [scrollbarV]=\"state.options.scrollbarV\"\n        [scrollbarH]=\"state.options.scrollbarH\"\n        [count]=\"state.rowCount\"\n        [scrollWidth]=\"state.columnGroupWidths.total\">\n        <datatable-body-row\n          [ngStyle]=\"getRowsStyles(row)\"\n          [style.height]=\"state.options.rowHeight + 'px'\"\n          *ngFor=\"let row of rows; let i = index; trackBy: trackRowBy\"\n          [attr.tabindex]=\"i\"\n          (click)=\"rowClicked($event, i, row)\"\n          (dblclick)=\"rowClicked($event, i, row)\"\n          (keydown)=\"rowKeydown($event, i, row)\"\n          [row]=\"row\"\n          [class.datatable-row-even]=\"row.$$index % 2 === 0\"\n          [class.datatable-row-odd]=\"row.$$index % 2 !== 0\">\n        </datatable-body-row>\n      </div>\n      <div\n        class=\"empty-row\"\n        *ngIf=\"!rows.length\"\n        [innerHTML]=\"state.options.emptyMessage\">\n      </div>\n    </div>\n  "
+            template: "\n    <div>\n      <datatable-progress\n        *ngIf=\"state.options.loadingIndicator\">\n      </datatable-progress>\n      <div\n        *ngIf=\"state.rows.length\"\n        scroller\n        (onScroll)=\"onBodyScroll($event)\"\n        [rowHeight]=\"state.options.rowHeight\"\n        [scrollbarV]=\"state.options.scrollbarV\"\n        [scrollbarH]=\"state.options.scrollbarH\"\n        [count]=\"state.rowCount\"\n        [scrollWidth]=\"state.columnGroupWidths.total\">\n        <datatable-body-row\n          *ngFor=\"let row of rows; let i = index; trackBy: trackRowBy\"\n          [row]=\"row\"\n          [columns]=\"state.options.columns\"\n          [dimensions]=\"state.dimensions\"\n          [rowHeight]=\"state.options.rowHeight\"\n          [ngStyle]=\"getRowsStyles(row, i)\"\n          [style.height]=\"state.options.rowHeight + 'px'\"\n          [attr.tabindex]=\"i\"\n          (click)=\"rowClicked($event, i, row)\"\n          (dblclick)=\"rowClicked($event, i, row)\"\n          (keydown)=\"rowKeydown($event, i, row)\"\n          [class.active]=\"state.isRowSelected(row)\"\n          [class.datatable-row-even]=\"(this.state.indexes.first + i) % 2 === 0\"\n          [class.datatable-row-odd]=\"(this.state.indexes.first + i) % 2 !== 0\">\n        </datatable-body-row>\n      </div>\n      <div\n        class=\"empty-row\"\n        *ngIf=\"!rows.length\"\n        [innerHTML]=\"state.options.emptyMessage\">\n      </div>\n    </div>\n  "
         }), 
         __metadata('design:paramtypes', [services_1.StateService, core_1.ElementRef, core_1.Renderer])
     ], DataTableBody);

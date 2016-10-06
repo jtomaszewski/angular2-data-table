@@ -12,18 +12,24 @@ var core_1 = require('@angular/core');
 var utils_1 = require('../utils');
 var models_1 = require('../models');
 var types_1 = require('../types');
+;
 var StateService = (function () {
     function StateService() {
         this.rows = [];
         this.selected = [];
-        this.onSortChange = new core_1.EventEmitter();
-        this.onSelectionChange = new core_1.EventEmitter();
+        this.options = new models_1.TableOptions();
+        this.dimensions = {
+            scrollbarWidth: utils_1.scrollbarWidth(),
+            offsetX: 0,
+            offsetY: 0,
+            innerWidth: 0
+        };
         this.onRowsUpdate = new core_1.EventEmitter();
+        this.onSelectionChange = new core_1.EventEmitter();
+        this.onOptionsUpdate = new core_1.EventEmitter();
+        this.onSortChange = new core_1.EventEmitter();
         this.onPageChange = new core_1.EventEmitter();
-        this.scrollbarWidth = utils_1.scrollbarWidth();
-        this.offsetX = 0;
-        this.offsetY = 0;
-        this.innerWidth = 0;
+        this.onColumnChange = new core_1.EventEmitter();
         this.selectedIdentities = [];
         // this body height is a placeholder
         // its only used internally, if you
@@ -86,7 +92,7 @@ var StateService = (function () {
             var first = 0;
             var last = 0;
             if (this.options.scrollbarV) {
-                var floor = Math.floor((this.offsetY || 0) / this.options.rowHeight);
+                var floor = Math.floor((this.dimensions.offsetY || 0) / this.options.rowHeight);
                 first = Math.max(floor, 0);
                 last = Math.min(first + this.pageSize, this.rowCount);
             }
@@ -99,9 +105,11 @@ var StateService = (function () {
         enumerable: true,
         configurable: true
     });
-    StateService.prototype.cacheSelected = function () {
-        var _this = this;
-        this.selected = this.rows.filter(function (row) { return _this.isRowSelected(row); });
+    StateService.prototype.setRows = function (rows) {
+        this.rows = rows ? rows.slice() : [];
+        this.cacheSelected();
+        this.onRowsUpdate.emit(rows);
+        return this;
     };
     StateService.prototype.setSelected = function (selected) {
         this.selectedIdentities = (selected || []).map(this.options.rowIdentityFunction);
@@ -109,15 +117,17 @@ var StateService = (function () {
         this.onSelectionChange.emit(this.selected);
         return this;
     };
-    StateService.prototype.setRows = function (rows) {
-        this.rows = rows ? rows.slice() : [];
-        this.cacheSelected();
-        this.onRowsUpdate.emit(rows);
-        return this;
-    };
     StateService.prototype.setOptions = function (options) {
         this.options = options;
+        this.onOptionsUpdate.emit(options);
         return this;
+    };
+    StateService.prototype.updateOptions = function (newOptions) {
+        this.setOptions(new models_1.TableOptions(Object.assign({}, this.options, newOptions)));
+        return this;
+    };
+    StateService.prototype.updateDimensions = function (dimensions) {
+        this.dimensions = Object.assign({}, this.dimensions, dimensions);
     };
     StateService.prototype.setPage = function (_a) {
         var type = _a.type, value = _a.value;
@@ -133,6 +143,27 @@ var StateService = (function () {
         var rowIdentity = this.options.rowIdentityFunction(row);
         return this.selectedIdentities.indexOf(rowIdentity) !== -1;
     };
+    StateService.prototype.resizeColumn = function (column, width) {
+        this.updateOptions({
+            columns: this.options.columns.map(function (c) {
+                return c === column ? new models_1.TableColumn(Object.assign({}, c, { width: width })) : c;
+            })
+        });
+        this.onColumnChange.emit({
+            type: 'resize',
+            value: column
+        });
+    };
+    StateService.prototype.reorderColumns = function (column, prevIndex, newIndex) {
+        var columns = this.options.columns.slice();
+        columns.splice(prevIndex, 1);
+        columns.splice(newIndex, 0, column);
+        this.updateOptions({ columns: columns });
+        this.onColumnChange.emit({
+            type: 'reorder',
+            value: column
+        });
+    };
     StateService.prototype.nextSort = function (column) {
         var idx = this.options.sorts.findIndex(function (s) {
             return s.prop === column.prop;
@@ -141,26 +172,40 @@ var StateService = (function () {
         var curDir = undefined;
         if (curSort)
             curDir = curSort.dir;
+        // TODO don't change options in place
         var dir = utils_1.nextSortDir(this.options.sortType, curDir);
+        var sorts = this.options.sorts.slice();
         if (dir === undefined) {
-            this.options.sorts.splice(idx, 1);
+            sorts.splice(idx, 1);
         }
         else if (curSort) {
-            this.options.sorts[idx].dir = dir;
+            sorts[idx] = new models_1.Sort(Object.assign({}, sorts[idx], { dir: dir }));
         }
         else {
             if (this.options.sortType === types_1.SortType.single) {
-                this.options.sorts.splice(0, this.options.sorts.length);
+                sorts.splice(0, sorts.length);
             }
-            this.options.sorts.push(new models_1.Sort({ dir: dir, prop: column.prop }));
+            sorts.push(new models_1.Sort({ dir: dir, prop: column.prop }));
         }
+        this.updateOptions({ sorts: sorts });
         if (!column.comparator) {
             this.setRows(utils_1.sortRows(this.rows, this.options.sorts));
         }
         else {
+            // NOTE why is it async?
+            // Shouldnt it be sync, or maybe we should at least add some callback here,
+            // so there's no race condition?
             column.comparator(this.rows, this.options.sorts);
         }
         this.onSortChange.emit({ column: column });
+        this.onColumnChange.emit({
+            type: 'sort',
+            value: column
+        });
+    };
+    StateService.prototype.cacheSelected = function () {
+        var _this = this;
+        this.selected = this.rows.filter(function (row) { return _this.isRowSelected(row); });
     };
     StateService = __decorate([
         core_1.Injectable(), 

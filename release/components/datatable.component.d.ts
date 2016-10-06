@@ -1,9 +1,10 @@
-import { ElementRef, EventEmitter, OnInit, OnChanges, QueryList, AfterViewInit, Renderer } from '@angular/core';
+import { ElementRef, EventEmitter, OnInit, OnChanges, QueryList, AfterViewInit, Renderer, ChangeDetectorRef } from '@angular/core';
 import { TableOptions } from '../models';
 import { DataTableColumn } from './datatable-column.directive';
 import { StateService } from '../services';
 export declare class DataTable implements OnInit, OnChanges, AfterViewInit {
     state: StateService;
+    private cd;
     options: TableOptions;
     rows: any[];
     selected: any[];
@@ -15,7 +16,7 @@ export declare class DataTable implements OnInit, OnChanges, AfterViewInit {
     columns: QueryList<DataTableColumn>;
     private element;
     private pageSubscriber;
-    constructor(state: StateService, renderer: Renderer, element: ElementRef);
+    constructor(state: StateService, renderer: Renderer, element: ElementRef, cd: ChangeDetectorRef);
     ngOnInit(): void;
     ngAfterViewInit(): void;
     ngOnChanges(changes: any): void;

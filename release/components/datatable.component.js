@@ -18,8 +18,10 @@ var models_1 = require('../models');
 var datatable_column_directive_1 = require('./datatable-column.directive');
 var services_1 = require('../services');
 var DataTable = (function () {
-    function DataTable(state, renderer, element) {
+    function DataTable(state, renderer, element, cd) {
+        var _this = this;
         this.state = state;
+        this.cd = cd;
         this.onPageChange = new core_1.EventEmitter();
         this.onRowsUpdate = new core_1.EventEmitter();
         this.onRowClick = new core_1.EventEmitter();
@@ -27,6 +29,10 @@ var DataTable = (function () {
         this.onColumnChange = new core_1.EventEmitter();
         this.element = element.nativeElement;
         renderer.setElementClass(this.element, 'datatable', true);
+        this.state.onColumnChange.subscribe(function (event) {
+            _this.onColumnChange.next(event);
+            _this.cd.markForCheck();
+        });
     }
     DataTable.prototype.ngOnInit = function () {
         var _this = this;
@@ -63,6 +69,7 @@ var DataTable = (function () {
     DataTable.prototype.ngOnChanges = function (changes) {
         if (changes.hasOwnProperty('options')) {
             this.state.setOptions(changes.options.currentValue);
+            this.cd.markForCheck();
         }
         if (changes.hasOwnProperty('rows')) {
             this.state.setRows(changes.rows.currentValue);
@@ -73,7 +80,9 @@ var DataTable = (function () {
     };
     DataTable.prototype.adjustSizes = function () {
         var _a = this.element.getBoundingClientRect(), height = _a.height, width = _a.width;
-        this.state.innerWidth = Math.floor(width);
+        this.state.updateDimensions({
+            innerWidth: Math.floor(width)
+        });
         if (this.options.scrollbarV) {
             if (this.options.headerHeight)
                 height = height - this.options.headerHeight;
@@ -86,9 +95,9 @@ var DataTable = (function () {
     DataTable.prototype.adjustColumns = function (forceIdx) {
         if (!this.options.columns)
             return;
-        var width = this.state.innerWidth;
+        var width = this.state.dimensions.innerWidth;
         if (this.options.scrollbarV) {
-            width = width - this.state.scrollbarWidth;
+            width = width - this.state.dimensions.scrollbarWidth;
         }
         if (this.options.columnMode === types_1.ColumnMode.force) {
             utils_1.forceFillColumnWidths(this.options.columns, width, forceIdx);
@@ -96,6 +105,7 @@ var DataTable = (function () {
         else if (this.options.columnMode === types_1.ColumnMode.flex) {
             utils_1.adjustColumnWidths(this.options.columns, width);
         }
+        this.cd.markForCheck();
     };
     DataTable.prototype.onRowSelect = function (event) {
         if (this.options.mutateSelectionState) {
@@ -211,10 +221,10 @@ var DataTable = (function () {
         core_1.Component({
             selector: 'datatable',
             providers: [services_1.StateService],
-            template: "\n    <div\n      visibility-observer\n      (onVisibilityChange)=\"adjustSizes()\">\n      <datatable-header\n        *ngIf=\"state.options.headerHeight\"\n        (onColumnChange)=\"onColumnChange.emit($event)\">\n      </datatable-header>\n      <datatable-body\n        (onRowClick)=\"onRowClick.emit($event)\"\n        (onRowSelect)=\"onRowSelect($event)\">\n      </datatable-body>\n      <datatable-footer\n         *ngIf=\"state.options.footerHeight\"\n        (onPageChange)=\"state.setPage($event)\">\n      </datatable-footer>\n    </div>\n  "
+            template: "\n    <div\n      visibility-observer\n      (onVisibilityChange)=\"adjustSizes()\">\n      <datatable-header\n        *ngIf=\"state.options.headerHeight\">\n      </datatable-header>\n      <datatable-body\n        (onRowClick)=\"onRowClick.emit($event)\"\n        (onRowSelect)=\"onRowSelect($event)\">\n      </datatable-body>\n      <datatable-footer\n         *ngIf=\"state.options.footerHeight\"\n        (onPageChange)=\"state.setPage($event)\">\n      </datatable-footer>\n    </div>\n  "
         }),
         __param(0, core_1.Host()), 
-        __metadata('design:paramtypes', [services_1.StateService, core_1.Renderer, core_1.ElementRef])
+        __metadata('design:paramtypes', [services_1.StateService, core_1.Renderer, core_1.ElementRef, core_1.ChangeDetectorRef])
     ], DataTable);
     return DataTable;
 }());

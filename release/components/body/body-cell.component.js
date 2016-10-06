@@ -11,10 +11,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var core_1 = require('@angular/core');
 var models_1 = require('../../models');
 var utils_1 = require('../../utils');
-var services_1 = require('../../services');
 var DataTableBodyCell = (function () {
-    function DataTableBodyCell(element, renderer, state) {
-        this.state = state;
+    function DataTableBodyCell(element, renderer) {
         renderer.setElementClass(element.nativeElement, 'datatable-body-cell', true);
     }
     Object.defineProperty(DataTableBodyCell.prototype, "value", {
@@ -37,10 +35,9 @@ var DataTableBodyCell = (function () {
     });
     Object.defineProperty(DataTableBodyCell.prototype, "height", {
         get: function () {
-            var height = this.state.options.rowHeight;
-            if (isNaN(height))
-                return height;
-            return height + 'px';
+            if (isNaN(this.rowHeight))
+                return this.rowHeight;
+            return this.rowHeight + 'px';
         },
         enumerable: true,
         configurable: true
@@ -54,6 +51,10 @@ var DataTableBodyCell = (function () {
         __metadata('design:type', Object)
     ], DataTableBodyCell.prototype, "row", void 0);
     __decorate([
+        core_1.Input(), 
+        __metadata('design:type', Number)
+    ], DataTableBodyCell.prototype, "rowHeight", void 0);
+    __decorate([
         core_1.HostBinding('style.width.px'), 
         __metadata('design:type', Object)
     ], DataTableBodyCell.prototype, "width", null);
@@ -64,9 +65,10 @@ var DataTableBodyCell = (function () {
     DataTableBodyCell = __decorate([
         core_1.Component({
             selector: 'datatable-body-cell',
-            template: "\n    <div class=\"datatable-body-cell-label\">\n      <span\n        *ngIf=\"!column.cellTemplate\"\n        [innerHTML]=\"value\">\n      </span>\n      <template\n        *ngIf=\"column.cellTemplate\"\n        [ngTemplateOutlet]=\"column.cellTemplate\"\n        [ngOutletContext]=\"{ value: value, row: row, column: column }\">\n      </template>\n    </div>\n  "
+            template: "\n    <div class=\"datatable-body-cell-label\">\n      <span\n        *ngIf=\"!column.cellTemplate\"\n        [innerHTML]=\"value\">\n      </span>\n      <template\n        *ngIf=\"column.cellTemplate\"\n        [ngTemplateOutlet]=\"column.cellTemplate\"\n        [ngOutletContext]=\"{ value: value, row: row, column: column }\">\n      </template>\n    </div>\n  ",
+            changeDetection: core_1.ChangeDetectionStrategy.OnPush
         }), 
-        __metadata('design:paramtypes', [core_1.ElementRef, core_1.Renderer, services_1.StateService])
+        __metadata('design:paramtypes', [core_1.ElementRef, core_1.Renderer])
     ], DataTableBodyCell);
     return DataTableBodyCell;
 }());

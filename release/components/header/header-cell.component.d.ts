@@ -1,5 +1,5 @@
 
-import { ElementRef, EventEmitter, Renderer } from '@angular/core';
+import { ElementRef, Renderer } from '@angular/core';
 import { StateService } from '../../services';
 import { TableColumn } from '../../models';
 import { SortDirection } from '../../types';
@@ -7,12 +7,11 @@ export declare class DataTableHeaderCell {
     element: ElementRef;
     private state;
     column: TableColumn;
-    onColumnChange: EventEmitter<any>;
+    sortDirection: SortDirection | null;
     sort: Function;
-    readonly sortDir: SortDirection;
     readonly name: string;
     constructor(element: ElementRef, state: StateService, renderer: Renderer);
-    sortClasses(sort: any): {
+    getSortBtnClasses(): {
         'sort-asc icon-down': boolean;
         'sort-desc icon-up': boolean;
     };

@@ -1,18 +1,23 @@
 
 import { EventEmitter } from '@angular/core';
 import { TableOptions, TableColumn } from '../models';
+export interface TableDimensionsI {
+    scrollbarWidth?: number;
+    offsetX?: number;
+    offsetY?: number;
+    innerWidth?: number;
+}
 export declare class StateService {
+    rows: Object[];
+    selected: Object[];
     options: TableOptions;
-    rows: Array<any>;
-    selected: Array<any>;
-    onSortChange: EventEmitter<any>;
-    onSelectionChange: EventEmitter<any>;
+    dimensions: TableDimensionsI;
     onRowsUpdate: EventEmitter<any>;
+    onSelectionChange: EventEmitter<any>;
+    onOptionsUpdate: EventEmitter<any>;
+    onSortChange: EventEmitter<any>;
     onPageChange: EventEmitter<any>;
-    scrollbarWidth: number;
-    offsetX: number;
-    offsetY: number;
-    innerWidth: number;
+    onColumnChange: EventEmitter<any>;
     private selectedIdentities;
     private _bodyHeight;
     bodyHeight: number;
@@ -33,14 +38,18 @@ export declare class StateService {
         first: number;
         last: number;
     };
-    private cacheSelected();
-    setSelected(selected: any[]): StateService;
-    setRows(rows: any[]): StateService;
+    setRows(rows: Object[]): StateService;
+    setSelected(selected: Object[]): StateService;
     setOptions(options: TableOptions): StateService;
+    updateOptions(newOptions: Object): StateService;
+    updateDimensions(dimensions: TableDimensionsI): void;
     setPage({type, value}: {
         type: any;
         value: any;
     }): void;
     isRowSelected(row: any): boolean;
+    resizeColumn(column: TableColumn, width: number): void;
+    reorderColumns(column: TableColumn, prevIndex: number, newIndex: number): void;
     nextSort(column: TableColumn): void;
+    private cacheSelected();
 }

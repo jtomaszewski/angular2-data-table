@@ -1,3 +1,4 @@
+
 import { EventEmitter, OnInit, OnDestroy, ElementRef, Renderer } from '@angular/core';
 import { StateService } from '../../services';
 import { Scroller } from '../../directives';
@@ -6,7 +7,8 @@ export declare class DataTableBody implements OnInit, OnDestroy {
     onRowClick: EventEmitter<any>;
     onRowSelect: EventEmitter<any>;
     scroller: Scroller;
-    rows: any;
+    rows: Object[];
+    trackRowBy: Function;
     private prevIndex;
     private sub;
     readonly selectEnabled: boolean;
@@ -14,11 +16,10 @@ export declare class DataTableBody implements OnInit, OnDestroy {
     readonly bodyWidth: string;
     constructor(state: StateService, element: ElementRef, renderer: Renderer);
     ngOnInit(): void;
-    trackRowBy(index: number, obj: any): any;
     onBodyScroll(props: any): void;
     updatePage(direction: any): void;
     updateRows(refresh?: boolean): void;
-    getRowsStyles(row: any): {
+    getRowsStyles(row: Object, idx: number): {
         height: string;
     };
     hideIndicator(): void;
@@ -26,4 +27,5 @@ export declare class DataTableBody implements OnInit, OnDestroy {
     rowKeydown(event: any, index: any, row: any): void;
     selectRow(event: any, index: any, row: any): void;
     ngOnDestroy(): void;
+    private _trackRowBy(index, row);
 }

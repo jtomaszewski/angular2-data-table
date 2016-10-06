@@ -16,22 +16,9 @@ var DataTableHeaderCell = (function () {
     function DataTableHeaderCell(element, state, renderer) {
         this.element = element;
         this.state = state;
-        this.onColumnChange = new core_1.EventEmitter();
         this.sort = this.onSort.bind(this);
         renderer.setElementClass(this.element.nativeElement, 'datatable-header-cell', true);
     }
-    Object.defineProperty(DataTableHeaderCell.prototype, "sortDir", {
-        get: function () {
-            var _this = this;
-            var sort = this.state.options.sorts.find(function (s) {
-                return s.prop === _this.column.prop;
-            });
-            if (sort)
-                return sort.dir;
-        },
-        enumerable: true,
-        configurable: true
-    });
     Object.defineProperty(DataTableHeaderCell.prototype, "name", {
         get: function () {
             return this.column.name || this.column.prop;
@@ -39,20 +26,15 @@ var DataTableHeaderCell = (function () {
         enumerable: true,
         configurable: true
     });
-    DataTableHeaderCell.prototype.sortClasses = function (sort) {
-        var dir = this.sortDir;
+    DataTableHeaderCell.prototype.getSortBtnClasses = function () {
         return {
-            'sort-asc icon-down': dir === types_1.SortDirection.asc,
-            'sort-desc icon-up': dir === types_1.SortDirection.desc
+            'sort-asc icon-down': this.sortDirection === types_1.SortDirection.asc,
+            'sort-desc icon-up': this.sortDirection === types_1.SortDirection.desc
         };
     };
     DataTableHeaderCell.prototype.onSort = function () {
         if (this.column.sortable) {
             this.state.nextSort(this.column);
-            this.onColumnChange.emit({
-                type: 'sort',
-                value: this.column
-            });
         }
     };
     __decorate([
@@ -60,13 +42,13 @@ var DataTableHeaderCell = (function () {
         __metadata('design:type', models_1.TableColumn)
     ], DataTableHeaderCell.prototype, "column", void 0);
     __decorate([
-        core_1.Output(), 
-        __metadata('design:type', core_1.EventEmitter)
-    ], DataTableHeaderCell.prototype, "onColumnChange", void 0);
+        core_1.Input(), 
+        __metadata('design:type', Object)
+    ], DataTableHeaderCell.prototype, "sortDirection", void 0);
     DataTableHeaderCell = __decorate([
         core_1.Component({
             selector: 'datatable-header-cell',
-            template: "\n    <div>\n      <span\n        class=\"datatable-header-cell-label draggable\"\n        *ngIf=\"!column.headerTemplate\"\n        (click)=\"onSort()\"\n        [innerHTML]=\"name\">\n      </span>\n      <template\n        *ngIf=\"column.headerTemplate\"\n        [ngTemplateOutlet]=\"column.headerTemplate\"\n        [ngOutletContext]=\"{ column: column, sort: sort }\">\n      </template>\n      <span\n        class=\"sort-btn\"\n        [ngClass]=\"sortClasses()\">\n      </span>\n    </div>\n  ",
+            template: "\n    <div>\n      <span\n        class=\"datatable-header-cell-label draggable\"\n        *ngIf=\"!column.headerTemplate\"\n        (click)=\"onSort()\"\n        [innerHTML]=\"name\">\n      </span>\n      <template\n        *ngIf=\"column.headerTemplate\"\n        [ngTemplateOutlet]=\"column.headerTemplate\"\n        [ngOutletContext]=\"{ column: column, sort: sort }\">\n      </template>\n      <span\n        class=\"sort-btn\"\n        [ngClass]=\"getSortBtnClasses()\">\n      </span>\n    </div>\n  ",
             host: {
                 '[class.sortable]': 'column.sortable',
                 '[class.resizable]': 'column.resizable',
@@ -75,7 +57,8 @@ var DataTableHeaderCell = (function () {
                 '[style.maxWidth]': 'column.maxWidth + "px"',
                 '[style.height]': 'column.height + "px"',
                 '[attr.title]': 'name'
-            }
+            },
+            changeDetection: core_1.ChangeDetectionStrategy.OnPush
         }), 
         __metadata('design:paramtypes', [core_1.ElementRef, services_1.StateService, core_1.Renderer])
     ], DataTableHeaderCell);

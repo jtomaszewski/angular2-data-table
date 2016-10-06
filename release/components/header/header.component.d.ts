@@ -1,11 +1,12 @@
-import { ElementRef, Renderer, EventEmitter } from '@angular/core';
+import { ElementRef, Renderer } from '@angular/core';
 import { StateService } from '../../services';
+import { TableColumn } from '../../models';
+import { SortDirection } from '../../types';
 export declare class DataTableHeader {
     private state;
-    onColumnChange: EventEmitter<any>;
+    constructor(state: StateService, element: ElementRef, renderer: Renderer);
     readonly headerWidth: string;
     readonly headerHeight: any;
-    constructor(state: StateService, element: ElementRef, renderer: Renderer);
     trackColBy(index: number, obj: any): any;
     columnResized(width: any, column: any): void;
     columnReordered({prevIndex, newIndex, model}: {
@@ -13,7 +14,8 @@ export declare class DataTableHeader {
         newIndex: any;
         model: any;
     }): void;
-    stylesByGroup(group: any): {
+    getStylesByGroup(group: any): {
         width: string;
     };
+    getColumnSortDirection(column: TableColumn): SortDirection | null;
 }

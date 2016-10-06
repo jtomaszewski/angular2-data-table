@@ -1,11 +1,23 @@
 import { ElementRef, Renderer } from '@angular/core';
-import { StateService } from '../../services';
+import { TableColumn } from '../../models';
 export declare class DataTableBodyRow {
-    state: StateService;
     row: any;
-    readonly isSelected: boolean;
-    constructor(state: StateService, element: ElementRef, renderer: Renderer);
-    trackColBy(index: number, obj: any): any;
+    columns: TableColumn[];
+    dimensions: any;
+    rowHeight: number;
+    constructor(element: ElementRef, renderer: Renderer);
+    readonly columnsByPin: {
+        left: any[];
+        center: any[];
+        right: any[];
+    };
+    readonly columnGroupWidths: {
+        left: number;
+        center: number;
+        right: number;
+        total: number;
+    };
+    trackColBy(index: number, column: TableColumn): string;
     stylesByGroup(group: any): {
         width: string;
     };
