@@ -47,6 +47,10 @@ export class TableOptions {
   // The minimum table height in pixels.
   tableHeight: number = 300;
 
+  // Minimum table width
+  // By default, it will be generated automatically
+  minimumTableWidth: number;
+
   // if external paging is turned on
   externalPaging: boolean = false;
 

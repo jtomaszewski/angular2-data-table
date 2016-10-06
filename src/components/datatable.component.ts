@@ -64,14 +64,17 @@ export class DataTable implements OnInit, OnChanges, AfterViewInit {
     @Host() public state: StateService,
     renderer: Renderer,
     element: ElementRef,
-    private cd: ChangeDetectorRef) {
+    public cd: ChangeDetectorRef) {
 
     this.element = element.nativeElement;
     renderer.setElementClass(this.element, 'datatable', true);
 
     this.state.onColumnChange.subscribe((event) => {
       this.onColumnChange.next(event);
-      this.cd.markForCheck();
+    });
+
+    this.state.onOptionsUpdate.subscribe(() => {
+      this.adjustSizes();
     });
   }
 
@@ -103,7 +106,7 @@ export class DataTable implements OnInit, OnChanges, AfterViewInit {
         // that are defined into the markup to
         // column objects
         for (let col of this.columns.toArray()) {
-          this.options.columns.push(new TableColumn(col));
+          this.state.options.columns.push(new TableColumn(col));
         }
       });
     }
@@ -112,7 +115,6 @@ export class DataTable implements OnInit, OnChanges, AfterViewInit {
   ngOnChanges(changes) {
     if (changes.hasOwnProperty('options')) {
       this.state.setOptions(changes.options.currentValue);
-      this.cd.markForCheck();
     }
 
     if (changes.hasOwnProperty('rows')) {
@@ -126,13 +128,14 @@ export class DataTable implements OnInit, OnChanges, AfterViewInit {
 
   adjustSizes() {
     let { height, width } = this.element.getBoundingClientRect();
+
     this.state.updateDimensions({
-      innerWidth: Math.floor(width)
+      innerWidth: this.state.options.minimumTableWidth || Math.floor(width)
     });
 
-    if (this.options.scrollbarV) {
-      if (this.options.headerHeight) height = height - this.options.headerHeight;
-      if (this.options.footerHeight) height = height - this.options.footerHeight;
+    if (this.state.options.scrollbarV) {
+      if (this.state.options.headerHeight) height = height - this.state.options.headerHeight;
+      if (this.state.options.footerHeight) height = height - this.state.options.footerHeight;
       this.state.bodyHeight = height;
     }
 
@@ -140,24 +143,23 @@ export class DataTable implements OnInit, OnChanges, AfterViewInit {
   }
 
   adjustColumns(forceIdx?: number) {
-    if (!this.options.columns) return;
+    if (!this.state.options.columns) return;
 
     let width: number = this.state.dimensions.innerWidth;
-    if (this.options.scrollbarV) {
+    if (this.state.options.scrollbarV) {
       width = width - this.state.dimensions.scrollbarWidth;
     }
 
-    if (this.options.columnMode === ColumnMode.force) {
-      forceFillColumnWidths(this.options.columns, width, forceIdx);
-    } else if (this.options.columnMode === ColumnMode.flex) {
-      adjustColumnWidths(this.options.columns, width);
+    if (this.state.options.columnMode === ColumnMode.force) {
+      forceFillColumnWidths(this.state.options.columns, width, forceIdx);
+    } else if (this.state.options.columnMode === ColumnMode.flex) {
+      adjustColumnWidths(this.state.options.columns, width);
     }
-
-    this.cd.markForCheck();
+    this.state.options.columns = [...this.state.options.columns];
   }
 
   onRowSelect(event) {
-    if (this.options.mutateSelectionState) {
+    if (this.state.options.mutateSelectionState) {
       this.state.setSelected(event);
     }
     this.onSelectionChange.emit(event);
@@ -170,7 +172,7 @@ export class DataTable implements OnInit, OnChanges, AfterViewInit {
 
   @HostBinding('class.fixed-header')
   get isFixedHeader() {
-    const headerHeight: number|string = this.options.headerHeight;
+    const headerHeight: number|string = this.state.options.headerHeight;
 
     return (typeof headerHeight === 'string') ?
       (<string>headerHeight) !== 'auto' : true;
@@ -178,7 +180,7 @@ export class DataTable implements OnInit, OnChanges, AfterViewInit {
 
   @HostBinding('class.fixed-row')
   get isFixedRow() {
-    const rowHeight: number|string = this.options.rowHeight;
+    const rowHeight: number|string = this.state.options.rowHeight;
 
     return (typeof rowHeight === 'string') ?
       (<string>rowHeight) !== 'auto' : true;
@@ -186,17 +188,17 @@ export class DataTable implements OnInit, OnChanges, AfterViewInit {
 
   @HostBinding('class.scroll-vertical')
   get isVertScroll() {
-    return this.options.scrollbarV;
+    return this.state.options.scrollbarV;
   }
 
   @HostBinding('class.scroll-horz')
   get isHorScroll() {
-    return this.options.scrollbarH;
+    return this.state.options.scrollbarH;
   }
 
   @HostBinding('class.selectable')
   get isSelectable() {
-    return this.options.selectionType !== undefined;
+    return this.state.options.selectionType !== undefined;
   }
 
 }

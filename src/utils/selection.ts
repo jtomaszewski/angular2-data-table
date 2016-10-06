@@ -1,17 +1,19 @@
 export function selectRows(selected, row) {
-  const selectedIndex = selected.indexOf(row);
+  const newSelected = [...selected];
+  const selectedIndex = newSelected.indexOf(row);
 
   if(selectedIndex > -1) {
-    selected.splice(selectedIndex, 1);
+    newSelected.splice(selectedIndex, 1);
   } else {
-    selected.push(row);
+    newSelected.push(row);
   }
 
-  return selected;
+  return newSelected;
 }
 
 export function selectRowsBetween(selected, rows, index, prevIndex) {
   const reverse = index < prevIndex;
+  const newSelected = [...selected];
 
   for(let i = 0, len = rows.length; i < len; i++) {
     const row = rows[i];
@@ -32,12 +34,12 @@ export function selectRowsBetween(selected, rows, index, prevIndex) {
     }
 
     if((reverse && lesser) || (!reverse && greater)) {
-      const idx = selected.indexOf(row);
+      const idx = newSelected.indexOf(row);
 
       // if reverse shift selection (unselect) and the
       // row is already selected, remove it from selected
       if (reverse && idx > -1) {
-        selected.splice(idx, 1);
+        newSelected.splice(idx, 1);
         continue;
       }
 
@@ -45,11 +47,11 @@ export function selectRowsBetween(selected, rows, index, prevIndex) {
       // not already in the selected array, add it
       if( i >= range.start && i < range.end) {
         if (idx === -1) {
-          selected.push(row);
+          newSelected.push(row);
         }
       }
     }
   }
 
-  return selected;
+  return newSelected;
 }

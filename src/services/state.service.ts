@@ -14,8 +14,8 @@ export interface TableDimensionsI {
 @Injectable()
 export class StateService {
 
-  rows: Object[] = [];
-  selected: Object[] = [];
+  rows: any[] = [];
+  selected: any[] = [];
   options: TableOptions = new TableOptions();
   dimensions: TableDimensionsI = {
     scrollbarWidth: scrollbarWidth(),
@@ -88,7 +88,7 @@ export class StateService {
     return { first, last };
   }
 
-  setRows(rows: Object[]): StateService {
+  setRows(rows: any[]): StateService {
     this.rows = rows ? [...rows] : [];
     this.cacheSelected();
     this.onRowsUpdate.emit(rows);
@@ -96,7 +96,7 @@ export class StateService {
     return this;
   }
 
-  setSelected(selected: Object[]): StateService {
+  setSelected(selected: any[]): StateService {
     this.selectedIdentities = (selected || []).map(this.options.rowIdentityFunction);
     this.cacheSelected();
     this.onSelectionChange.emit(this.selected);
@@ -110,7 +110,7 @@ export class StateService {
     return this;
   }
 
-  updateOptions(newOptions: Object): StateService {
+  updateOptions(newOptions: any): StateService {
     this.setOptions(new TableOptions(Object.assign({}, this.options, newOptions)));
     return this;
   }
@@ -136,11 +136,9 @@ export class StateService {
   }
 
   resizeColumn(column: TableColumn, width: number): void {
-    this.updateOptions({
-      columns: this.options.columns.map(c => {
-        return c === column ? new TableColumn(Object.assign({}, c, {width})) : c;
-      })
-    });
+    // TODO dont mutate inplace
+    column.width = width;
+    this.options.columns = [...this.options.columns];
 
     this.onColumnChange.emit({
       type: 'resize',
@@ -153,7 +151,8 @@ export class StateService {
     columns.splice(prevIndex, 1);
     columns.splice(newIndex, 0, column);
 
-    this.updateOptions({columns});
+    // TODO dont mutate inplace
+    this.options.columns = columns;
 
     this.onColumnChange.emit({
       type: 'reorder',

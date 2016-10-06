@@ -60,9 +60,7 @@ export function orderByComparator(a: any, b: any): number {
  * @return {Array<any>} results
  */
 export function sortRows(rows: Array<any>, dirs: Array<Sort>) {
-  let temp = [...rows];
-
-  return temp.sort(function(a: any, b: any) {
+  return [...rows].sort(function(a: any, b: any) {
     for(const { prop, dir } of dirs) {
       const comparison = dir !== SortDirection.desc ?
         orderByComparator(a[prop], b[prop]) :
