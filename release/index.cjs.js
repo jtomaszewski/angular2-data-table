@@ -270,7 +270,7 @@ function forceFillColumnWidths(allColumns, expectedWidth, startIdx) {
                 column.$$oldWidth = column.width;
             }
             var newSize = column.$$oldWidth + additionWidthPerColumn;
-            if (column.minWith && newSize < column.minWidth) {
+            if (column.minWidth && newSize < column.minWidth) {
                 column.width = column.minWidth;
             }
             else if (column.maxWidth && newSize > column.maxWidth) {
