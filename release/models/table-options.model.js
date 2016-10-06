@@ -35,6 +35,8 @@ var TableOptions = (function () {
         this.footerHeight = 0;
         // The minimum table height in pixels.
         this.tableHeight = 300;
+        // Automatically recalculate column sizes on window:resize event?
+        this.adjustSizesOnWindowResize = true;
         // if external paging is turned on
         this.externalPaging = false;
         // Page size

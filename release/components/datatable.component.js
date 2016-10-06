@@ -115,7 +115,9 @@ var DataTable = (function () {
         this.onSelectionChange.emit(event);
     };
     DataTable.prototype.resize = function () {
-        this.adjustSizes();
+        if (this.state.options.adjustSizesOnWindowResize) {
+            this.adjustSizes();
+        }
     };
     Object.defineProperty(DataTable.prototype, "isFixedHeader", {
         get: function () {

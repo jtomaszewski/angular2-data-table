@@ -625,6 +625,8 @@ var TableOptions = (function () {
         this.footerHeight = 0;
         // The minimum table height in pixels.
         this.tableHeight = 300;
+        // Automatically recalculate column sizes on window:resize event?
+        this.adjustSizesOnWindowResize = true;
         // if external paging is turned on
         this.externalPaging = false;
         // Page size
@@ -1090,7 +1092,9 @@ var DataTable = (function () {
         this.onSelectionChange.emit(event);
     };
     DataTable.prototype.resize = function () {
-        this.adjustSizes();
+        if (this.state.options.adjustSizesOnWindowResize) {
+            this.adjustSizes();
+        }
     };
     Object.defineProperty(DataTable.prototype, "isFixedHeader", {
         get: function () {
