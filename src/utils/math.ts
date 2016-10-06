@@ -125,7 +125,7 @@ export function forceFillColumnWidths(allColumns: any, expectedWidth: any, start
       }
 
       const newSize = column.$$oldWidth + additionWidthPerColumn;
-      if(column.minWith && newSize < column.minWidth) {
+      if(column.minWidth && newSize < column.minWidth) {
         column.width = column.minWidth;
       } else if(column.maxWidth && newSize > column.maxWidth) {
         column.width = column.maxWidth;
