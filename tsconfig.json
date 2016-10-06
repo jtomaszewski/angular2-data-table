@@ -20,9 +20,8 @@
     "suppressImplicitAnyIndexErrors": true,
     "outDir": "dist"
   },
-  "files": [
-    "src/custom-types.d.ts",
-    "src/index.ts"
+  "include": [
+    "src/**/*.ts"
   ],
   "exclude": [
     "node_modules"

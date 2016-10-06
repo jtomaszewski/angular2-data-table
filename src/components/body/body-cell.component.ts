@@ -1,5 +1,5 @@
 import {
-  Component, 
+  Component,
   Input,
   PipeTransform,
   HostBinding,
@@ -10,7 +10,6 @@ import {
 
 import { TableColumn } from '../../models';
 import { deepValueGetter } from '../../utils';
-import { StateService } from '../../services';
 
 @Component({
   selector: 'datatable-body-cell',
@@ -35,7 +34,7 @@ export class DataTableBodyCell {
   @Input() row: any;
   @Input() rowHeight: number;
 
-  constructor(element: ElementRef, renderer: Renderer, private state: StateService) {
+  constructor(element: ElementRef, renderer: Renderer) {
     renderer.setElementClass(element.nativeElement, 'datatable-body-cell', true);
   }
 

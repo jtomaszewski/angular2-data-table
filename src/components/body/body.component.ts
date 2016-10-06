@@ -35,16 +35,18 @@ import { Scroller } from '../../directives';
         <datatable-body-row
           *ngFor="let row of rows; let i = index; trackBy: trackRowBy"
           [row]="row"
+          [columns]="state.options.columns"
+          [dimensions]="state.dimensions"
           [rowHeight]="state.options.rowHeight"
-          [ngStyle]="getRowsStyles(row)"
+          [ngStyle]="getRowsStyles(row, i)"
           [style.height]="state.options.rowHeight + 'px'"
           [attr.tabindex]="i"
           (click)="rowClicked($event, i, row)"
           (dblclick)="rowClicked($event, i, row)"
           (keydown)="rowKeydown($event, i, row)"
           [class.active]="state.isRowSelected(row)"
-          [class.datatable-row-even]="row.$$index % 2 === 0"
-          [class.datatable-row-odd]="row.$$index % 2 !== 0">
+          [class.datatable-row-even]="(this.state.indexes.first + i) % 2 === 0"
+          [class.datatable-row-odd]="(this.state.indexes.first + i) % 2 !== 0">
         </datatable-body-row>
       </div>
       <div
@@ -62,7 +64,10 @@ export class DataTableBody implements OnInit, OnDestroy {
 
   @ViewChild(Scroller) scroller: Scroller;
 
-  public rows: any;
+  public rows: Object[];
+
+  public trackRowBy: Function = this._trackRowBy.bind(this);
+
   private prevIndex: number;
   private sub: Subscription;
 
@@ -82,7 +87,7 @@ export class DataTableBody implements OnInit, OnDestroy {
   @HostBinding('style.width')
   get bodyWidth() {
     if (this.state.options.scrollbarH) {
-      return this.state.innerWidth + 'px';
+      return this.state.dimensions.innerWidth + 'px';
     } else {
       return '100%';
     }
@@ -122,13 +127,11 @@ export class DataTableBody implements OnInit, OnDestroy {
     }));
   }
 
-  trackRowBy(index: number, obj: any) {
-    return obj.$$index;
-  }
-
   onBodyScroll(props) {
-    this.state.offsetY = props.scrollYPos;
-    this.state.offsetX = props.scrollXPos;
+    this.state.updateDimensions({
+      offsetY: props.scrollYPos,
+      offsetX: props.scrollXPos
+    });
 
     this.updatePage(props.direction);
     this.updateRows();
@@ -165,7 +168,6 @@ export class DataTableBody implements OnInit, OnDestroy {
       let row = this.state.rows[rowIndex];
 
       if(row) {
-        row.$$index = rowIndex;
         this.rows[idx] = row;
       }
 
@@ -174,16 +176,16 @@ export class DataTableBody implements OnInit, OnDestroy {
     }
   }
 
-  getRowsStyles(row) {
+  getRowsStyles(row: Object, idx: number) {
     const rowHeight = this.state.options.rowHeight;
 
-    let styles = {
+    const styles = {
       height: rowHeight + 'px'
     };
 
     if(this.state.options.scrollbarV) {
-      const idx = row ? row.$$index : 0;
-      const pos = idx * rowHeight;
+      const rowIndex = row ? this.state.indexes.first + idx : 0;
+      const pos = rowIndex * rowHeight;
       translateXY(styles, 0, pos);
     }
 
@@ -238,6 +240,10 @@ export class DataTableBody implements OnInit, OnDestroy {
     if (this.sub) {
       this.sub.unsubscribe();
     }
+  }
+
+  private _trackRowBy(index: number, row: Object) {
+    return this.state.options.rowIdentityFunction(row);
   }
 
 }

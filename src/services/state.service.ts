@@ -4,22 +4,32 @@ import { columnsByPin, columnGroupWidths, scrollbarWidth, nextSortDir, sortRows 
 import { TableOptions, TableColumn, Sort } from '../models';
 import { SortType } from '../types';
 
+export interface TableDimensionsI {
+  scrollbarWidth?: number;
+  offsetX?: number;
+  offsetY?: number;
+  innerWidth?: number;
+};
+
 @Injectable()
 export class StateService {
 
-  options: TableOptions;
-  rows: Array<any> = [];
-  selected: Array<any> = [];
+  rows: Object[] = [];
+  selected: Object[] = [];
+  options: TableOptions = new TableOptions();
+  dimensions: TableDimensionsI = {
+    scrollbarWidth: scrollbarWidth(),
+    offsetX: 0,
+    offsetY: 0,
+    innerWidth: 0
+  };
 
-  onSortChange: EventEmitter<any> = new EventEmitter();
-  onSelectionChange: EventEmitter<any> = new EventEmitter();
   onRowsUpdate: EventEmitter<any> = new EventEmitter();
+  onSelectionChange: EventEmitter<any> = new EventEmitter();
+  onOptionsUpdate: EventEmitter<any> = new EventEmitter();
+  onSortChange: EventEmitter<any> = new EventEmitter();
   onPageChange: EventEmitter<any> = new EventEmitter();
-
-  scrollbarWidth: number = scrollbarWidth();
-  offsetX: number = 0;
-  offsetY: number = 0;
-  innerWidth: number = 0;
+  onColumnChange: EventEmitter<any> = new EventEmitter();
 
   private selectedIdentities: Array<any> = [];
 
@@ -67,7 +77,7 @@ export class StateService {
     let last = 0;
 
     if (this.options.scrollbarV) {
-      const floor = Math.floor((this.offsetY || 0) / this.options.rowHeight);
+      const floor = Math.floor((this.dimensions.offsetY || 0) / this.options.rowHeight);
       first = Math.max(floor, 0);
       last = Math.min(first + this.pageSize, this.rowCount);
     } else {
@@ -78,15 +88,7 @@ export class StateService {
     return { first, last };
   }
 
-  setSelected(selected: any[]): StateService {
-    this.selectedIdentities = (selected || []).map(this.options.rowIdentityFunction);
-    this.cacheSelected();
-    this.onSelectionChange.emit(this.selected);
-
-    return this;
-  }
-
-  setRows(rows: any[]): StateService {
+  setRows(rows: Object[]): StateService {
     this.rows = rows ? [...rows] : [];
     this.cacheSelected();
     this.onRowsUpdate.emit(rows);
@@ -94,9 +96,27 @@ export class StateService {
     return this;
   }
 
+  setSelected(selected: Object[]): StateService {
+    this.selectedIdentities = (selected || []).map(this.options.rowIdentityFunction);
+    this.cacheSelected();
+    this.onSelectionChange.emit(this.selected);
+
+    return this;
+  }
+
   setOptions(options: TableOptions): StateService {
     this.options = options;
+    this.onOptionsUpdate.emit(options);
     return this;
+  }
+
+  updateOptions(newOptions: Object): StateService {
+    this.setOptions(new TableOptions(Object.assign({}, this.options, newOptions)));
+    return this;
+  }
+
+  updateDimensions(dimensions: TableDimensionsI): void {
+    this.dimensions = Object.assign({}, this.dimensions, dimensions);
   }
 
   setPage({ type, value }): void {
@@ -115,6 +135,32 @@ export class StateService {
     return this.selectedIdentities.indexOf(rowIdentity) !== -1;
   }
 
+  resizeColumn(column: TableColumn, width: number): void {
+    this.updateOptions({
+      columns: this.options.columns.map(c => {
+        return c === column ? new TableColumn(Object.assign({}, c, {width})) : c;
+      })
+    });
+
+    this.onColumnChange.emit({
+      type: 'resize',
+      value: column
+    });
+  }
+
+  reorderColumns(column: TableColumn, prevIndex: number, newIndex: number): void {
+    const columns = [...this.options.columns];
+    columns.splice(prevIndex, 1);
+    columns.splice(newIndex, 0, column);
+
+    this.updateOptions({columns});
+
+    this.onColumnChange.emit({
+      type: 'reorder',
+      value: column
+    });
+  }
+
   nextSort(column: TableColumn): void {
     const idx = this.options.sorts.findIndex(s => {
       return s.prop === column.prop;
@@ -124,26 +170,36 @@ export class StateService {
     let curDir = undefined;
     if (curSort) curDir = curSort.dir;
 
+    // TODO don't change options in place
     const dir = nextSortDir(this.options.sortType, curDir);
+    const sorts = [...this.options.sorts];
     if (dir === undefined) {
-      this.options.sorts.splice(idx, 1);
+      sorts.splice(idx, 1);
     } else if (curSort) {
-      this.options.sorts[idx].dir = dir;
+      sorts[idx] = new Sort(Object.assign({}, sorts[idx], {dir}));
     } else {
       if (this.options.sortType === SortType.single) {
-        this.options.sorts.splice(0, this.options.sorts.length);
+        sorts.splice(0, sorts.length);
       }
 
-      this.options.sorts.push(new Sort({dir, prop: column.prop}));
+      sorts.push(new Sort({dir, prop: column.prop}));
     }
+    this.updateOptions({sorts});
 
     if (!column.comparator) {
       this.setRows(sortRows(this.rows, this.options.sorts));
     } else {
+      // NOTE why is it async?
+      // Shouldnt it be sync, or maybe we should at least add some callback here,
+      // so there's no race condition?
       column.comparator(this.rows, this.options.sorts);
     }
 
     this.onSortChange.emit({ column });
+    this.onColumnChange.emit({
+      type: 'sort',
+      value: column
+    });
   }
 
   private cacheSelected(): void {

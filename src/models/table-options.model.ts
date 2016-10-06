@@ -85,7 +85,7 @@ export class TableOptions {
   // sorts
   sorts: Array<Sort> = [];
 
-  constructor(props: any) {
+  constructor(props: any = {}) {
     Object.assign(this, props);
     this.validate();
   }

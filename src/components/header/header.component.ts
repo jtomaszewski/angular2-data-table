@@ -1,13 +1,13 @@
 import {
   Component,
-  Output,
   ElementRef,
-  Renderer,
-  EventEmitter
+  Renderer
 } from '@angular/core';
 
 import { StateService } from '../../services';
 import { translateXY } from '../../utils';
+import { TableColumn } from '../../models';
+import { SortDirection } from '../../types';
 
 @Component({
   selector: 'datatable-header',
@@ -19,10 +19,12 @@ import { translateXY } from '../../utils';
       (onReorder)="columnReordered($event)">
       <div
         class="datatable-row-left"
-        [ngStyle]="stylesByGroup('left')"
+        [ngStyle]="getStylesByGroup('left')"
         *ngIf="state.columnsByPin.left.length">
         <datatable-header-cell
           *ngFor="let column of state.columnsByPin.left; trackBy: trackColBy"
+          [column]="column"
+          [sortDirection]="getColumnSortDirection(column)"
           resizeable
           [resizeEnabled]="column.resizeable"
           (onResize)="columnResized($event, column)"
@@ -31,17 +33,17 @@ import { translateXY } from '../../utils';
           (onLongPressEnd)="drag = false"
           draggable
           [dragX]="column.draggable && drag"
-          [dragY]="false"
-          [column]="column"
-          (onColumnChange)="onColumnChange.emit($event)">
+          [dragY]="false">
         </datatable-header-cell>
       </div>
       <div
         class="datatable-row-center"
-        [ngStyle]="stylesByGroup('center')"
+        [ngStyle]="getStylesByGroup('center')"
         *ngIf="state.columnsByPin.center.length">
         <datatable-header-cell
           *ngFor="let column of state.columnsByPin.center; trackBy: trackColBy"
+          [column]="column"
+          [sortDirection]="getColumnSortDirection(column)"
           resizeable
           [resizeEnabled]="column.resizeable"
           (onResize)="columnResized($event, column)"
@@ -50,17 +52,17 @@ import { translateXY } from '../../utils';
           (onLongPressEnd)="drag = false"
           draggable
           [dragX]="column.draggable && drag"
-          [dragY]="false"
-          [column]="column"
-          (onColumnChange)="onColumnChange.emit($event)">
+          [dragY]="false">
         </datatable-header-cell>
       </div>
       <div
         class="datatable-row-right"
-        [ngStyle]="stylesByGroup('right')"
+        [ngStyle]="getStylesByGroup('right')"
         *ngIf="state.columnsByPin.right.length">
         <datatable-header-cell
           *ngFor="let column of state.columnsByPin.right; trackBy: trackColBy"
+          [column]="column"
+          [sortDirection]="getColumnSortDirection(column)"
           resizeable
           [resizeEnabled]="column.resizeable"
           (onResize)="columnResized($event, column)"
@@ -69,9 +71,7 @@ import { translateXY } from '../../utils';
           (onLongPressEnd)="drag = false"
           draggable
           [dragX]="column.draggable && drag"
-          [dragY]="false"
-          [column]="column"
-          (onColumnChange)="onColumnChange.emit($event)">
+          [dragY]="false">
         </datatable-header-cell>
       </div>
     </div>
@@ -83,23 +83,24 @@ import { translateXY } from '../../utils';
 })
 export class DataTableHeader {
 
-  @Output() onColumnChange: EventEmitter<any> = new EventEmitter();
+  constructor(private state: StateService, element: ElementRef, renderer: Renderer) {
+    renderer.setElementClass(element.nativeElement, 'datatable-header', true);
+  }
 
   get headerWidth() {
-    if(this.state.options.scrollbarH)
-      return this.state.innerWidth + 'px';
+    if(this.state.options.scrollbarH) {
+      return this.state.dimensions.innerWidth + 'px';
+    }
 
     return '100%';
   }
 
   get headerHeight() {
     let height = this.state.options.headerHeight;
-    if(height !== 'auto') return `${height}px`;
+    if(height !== 'auto') {
+      return `${height}px`;
+    }
     return height;
-  }
-
-  constructor(private state: StateService, element: ElementRef, renderer: Renderer) {
-    renderer.setElementClass(element.nativeElement, 'datatable-header', true);
   }
 
   trackColBy(index: number, obj: any) {
@@ -113,27 +114,16 @@ export class DataTableHeader {
       width = column.maxWidth;
     }
 
-    column.width = width;
-
-    this.onColumnChange.emit({
-      type: 'resize',
-      value: column
-    });
+    this.state.resizeColumn(column, width);
   }
 
   columnReordered({ prevIndex, newIndex, model }) {
-    this.state.options.columns.splice(prevIndex, 1);
-    this.state.options.columns.splice(newIndex, 0, model);
-
-    this.onColumnChange.emit({
-      type: 'reorder',
-      value: model
-    });
+    this.state.reorderColumns(model, prevIndex, newIndex);
   }
 
-  stylesByGroup(group) {
+  getStylesByGroup(group) {
     const widths = this.state.columnGroupWidths;
-    const offsetX = this.state.offsetX;
+    const offsetX = this.state.dimensions.offsetX;
 
     let styles = {
       width: `${widths[group]}px`
@@ -142,12 +132,20 @@ export class DataTableHeader {
     if(group === 'center') {
       translateXY(styles, offsetX * -1, 0);
     } else if(group === 'right') {
-      const totalDiff = widths.total - this.state.innerWidth;
+      const totalDiff = widths.total - this.state.dimensions.innerWidth;
       const offset = totalDiff * -1;
       translateXY(styles, offset, 0);
     }
 
     return styles;
+  }
+
+  getColumnSortDirection(column: TableColumn): SortDirection | null {
+    const sort = this.state.options.sorts.find(s => {
+      return s.prop === column.prop;
+    });
+
+    return sort ? sort.dir : null;
   }
 
 }

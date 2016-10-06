@@ -39,7 +39,7 @@ export class App {
   sorter(rows, dirs) {
     console.log('sorting started!');
     setTimeout(() => {
-      this.rows.reverse();
+      this.rows = rows.reverse();
       console.log('sorted!');
     }, 500);
   }

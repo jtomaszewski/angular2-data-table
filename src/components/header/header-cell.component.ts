@@ -2,9 +2,8 @@ import {
   Component,
   Input,
   ElementRef,
-  EventEmitter,
-  Output,
-  Renderer
+  Renderer,
+  ChangeDetectionStrategy
 } from '@angular/core';
 
 import { StateService } from '../../services';
@@ -28,7 +27,7 @@ import { SortDirection } from '../../types';
       </template>
       <span
         class="sort-btn"
-        [ngClass]="sortClasses()">
+        [ngClass]="getSortBtnClasses()">
       </span>
     </div>
   `,
@@ -40,23 +39,15 @@ import { SortDirection } from '../../types';
     '[style.maxWidth]': 'column.maxWidth + "px"',
     '[style.height]': 'column.height + "px"',
     '[attr.title]': 'name'
-  }
+  },
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DataTableHeaderCell {
 
   @Input() column: TableColumn;
-
-  @Output() onColumnChange: EventEmitter<any> = new EventEmitter();
+  @Input() sortDirection: SortDirection | null;
 
   sort: Function = this.onSort.bind(this);
-
-  get sortDir() {
-    let sort = this.state.options.sorts.find(s => {
-      return s.prop === this.column.prop;
-    });
-
-    if(sort) return sort.dir;
-  }
 
   get name() {
     return this.column.name || this.column.prop;
@@ -66,22 +57,16 @@ export class DataTableHeaderCell {
     renderer.setElementClass(this.element.nativeElement, 'datatable-header-cell', true);
   }
 
-  sortClasses(sort) {
-    let dir = this.sortDir;
+  getSortBtnClasses() {
     return {
-      'sort-asc icon-down': dir === SortDirection.asc,
-      'sort-desc icon-up': dir === SortDirection.desc
+      'sort-asc icon-down': this.sortDirection === SortDirection.asc,
+      'sort-desc icon-up': this.sortDirection === SortDirection.desc
     };
   }
 
   onSort() {
     if(this.column.sortable) {
       this.state.nextSort(this.column);
-
-      this.onColumnChange.emit({
-        type: 'sort',
-        value: this.column
-      });
     }
   }
 

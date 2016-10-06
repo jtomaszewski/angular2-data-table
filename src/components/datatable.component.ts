@@ -30,8 +30,7 @@ import { StateService } from '../services';
       visibility-observer
       (onVisibilityChange)="adjustSizes()">
       <datatable-header
-        *ngIf="state.options.headerHeight"
-        (onColumnChange)="onColumnChange.emit($event)">
+        *ngIf="state.options.headerHeight">
       </datatable-header>
       <datatable-body
         (onRowClick)="onRowClick.emit($event)"
@@ -69,6 +68,11 @@ export class DataTable implements OnInit, OnChanges, AfterViewInit {
 
     this.element = element.nativeElement;
     renderer.setElementClass(this.element, 'datatable', true);
+
+    this.state.onColumnChange.subscribe((event) => {
+      this.onColumnChange.next(event);
+      this.cd.markForCheck();
+    });
   }
 
   ngOnInit(): void {
@@ -122,7 +126,9 @@ export class DataTable implements OnInit, OnChanges, AfterViewInit {
 
   adjustSizes() {
     let { height, width } = this.element.getBoundingClientRect();
-    this.state.innerWidth = Math.floor(width);
+    this.state.updateDimensions({
+      innerWidth: Math.floor(width)
+    });
 
     if (this.options.scrollbarV) {
       if (this.options.headerHeight) height = height - this.options.headerHeight;
@@ -136,9 +142,9 @@ export class DataTable implements OnInit, OnChanges, AfterViewInit {
   adjustColumns(forceIdx?: number) {
     if (!this.options.columns) return;
 
-    let width: number = this.state.innerWidth;
+    let width: number = this.state.dimensions.innerWidth;
     if (this.options.scrollbarV) {
-      width = width - this.state.scrollbarWidth;
+      width = width - this.state.dimensions.scrollbarWidth;
     }
 
     if (this.options.columnMode === ColumnMode.force) {
