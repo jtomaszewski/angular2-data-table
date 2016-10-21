@@ -127,7 +127,9 @@ export class DataTable implements OnInit, OnChanges, AfterViewInit {
   }
 
   adjustSizes() {
-    let { height, width } = this.element.getBoundingClientRect();
+    // Get bounding client rect of the child wrapper ,
+    // so we'll omit the border-width of the datatable component (if there's any)
+    let { height, width } = this.element.children[0].getBoundingClientRect();
 
     this.state.updateDimensions({
       innerWidth: this.state.options.minimumTableWidth || Math.floor(width)
