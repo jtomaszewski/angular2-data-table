@@ -80,7 +80,9 @@ var DataTable = (function () {
         }
     };
     DataTable.prototype.adjustSizes = function () {
-        var _a = this.element.getBoundingClientRect(), height = _a.height, width = _a.width;
+        // Get bounding client rect of the child wrapper ,
+        // so we'll omit the border-width of the datatable component (if there's any)
+        var _a = this.element.children[0].getBoundingClientRect(), height = _a.height, width = _a.width;
         this.state.updateDimensions({
             innerWidth: this.state.options.minimumTableWidth || Math.floor(width)
         });
